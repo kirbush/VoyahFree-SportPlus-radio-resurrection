@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<dabconfig>
+	<uart category="UART">
+	  <port_dir>/dev/ttyACM0</port_dir> 
+	  <baudrate>115200</baudrate> 
+	  <databits>8</databits> 
+	  <parity>NONE</parity> 
+	  <stopbit>1</stopbit> 
+	</uart>
+	<audio category="AUDIO">
+		<sound_card>1</sound_card> 
+		<sound_device>0</sound_device>
+	</audio>
+	<pcm category="PCM">
+		<channel>2</channel> 
+		<rate>48000</rate> 
+		<period_size>10240</period_size> 
+		<format>S16_LE</format> 
+		<period_count>4</period_count> 
+		<start_threshold>0</start_threshold> 
+		<stop_threshold>0</stop_threshold> 
+		<silence_threshold>0</silence_threshold> 
+		<avail_min>0</avail_min> 
+	</pcm>
+	<system category="SYSTEM">
+		<dab_dir>/mnt/sdcard/dab/</dab_dir> 
+		<ant_gain>0</ant_gain>
+		<radio_ant>1</radio_ant>
+		<dab_ant>1</dab_ant>
+		<default_source>0</default_source>
+		<epg_forecast_time_by_ct>0</epg_forecast_time_by_ct>
+	</system>
+	<radio category="RADIO">
+		<EON>1</EON>
+		<REG>1</REG>
+		<TA>1</TA>
+		<AF>1</AF>
+		<SF>1</SF>		
+		<CT>0</CT>
+		<SoftLink>0</SoftLink>
+	</radio>
+	<announcement category="ANNOUNCEMENT">
+		<Alarm>1</Alarm>
+		<Traffic>0</Traffic>
+		<Travel>0</Travel>
+		<Warning>1</Warning>
+		<News>0</News>
+		<Weather>0</Weather>
+		<Event>0</Event>
+		<Special>0</Special>
+		<Radio_info>0</Radio_info>
+		<Sport>0</Sport>
+		<Finance>0</Finance>
+	</announcement>
+</dabconfig>

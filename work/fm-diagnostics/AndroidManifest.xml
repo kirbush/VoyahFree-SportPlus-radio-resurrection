@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="ru.local.voyah.fmdiagnostics" android:versionCode="7" android:versionName="0.4.3-beta">
+ <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="30"/>
+ <uses-permission android:name="ru.local.voyah.fmloader.DIAGNOSTICS"/>
+ <queries><package android:name="ru.local.voyah.fmloader"/></queries>
+ <application android:label="FM Диагностика" android:icon="@drawable/diagnostics" android:theme="@android:style/Theme.Material.NoActionBar" android:allowBackup="false">
+  <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
+ </application>
+</manifest>

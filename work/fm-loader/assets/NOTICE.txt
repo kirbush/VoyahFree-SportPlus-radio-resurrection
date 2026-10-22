@@ -1,0 +1,6 @@
+Voyah FM Tester 0.3
+Includes an unmodified frida-inject16.5.9 binary copied from the owner's head unit.
+Upstream: https://github.com/frida/frida/tree/16.5.9
+Frida licence: see Frida-LICENSE.txt and LGPL-2.0.txt in these assets.
+Preserved AdayoDAB.apk and RdsApp.apk are proprietary vehicle software supplied from the owner's head unit for testing restoration on the same vehicle model. Rights remain with their respective developers.
+The tester does not patch system/vendor/boot or alter Tweaks startup files.

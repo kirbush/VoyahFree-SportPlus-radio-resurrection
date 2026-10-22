@@ -1,0 +1,31 @@
+# This checkout shares a workspace with local firmware research and build tools.
+# Track only the FM project; keep keys, device captures and binary payloads local.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/AGENTS.md
+!/PLAN.md
+!/TODO.md
+!/DECISIONS.md
+!/EVIDENCE.md
+!/work/
+/work/*
+!/work/fm-loader/
+!/work/fm-diagnostics/
+!/work/FM-BETA-STATE.md
+!/work/FM-PLAN.md
+!/work/FM-EVIDENCE.md
+
+__pycache__/
+*.pyc
+*.pyo
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.password
+/work/fm-loader/build/
+/work/fm-loader/test-build/
+/work/fm-loader/assets/*.apk
+/work/fm-loader/assets/frida-inject
