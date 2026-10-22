@@ -5,7 +5,9 @@ s=(P/'Install-FM.ps1').read_text(encoding='utf-8-sig')
 assert '# BEGIN FM BETA MIGRATION' in s,'Explicit beta migration is missing'
 body=s.split('# BEGIN FM BETA MIGRATION',1)[1].split('# END FM BETA MIGRATION',1)[0]
 assert not re.search(r'\brm\s+-[a-zA-Z]*r[a-zA-Z]*(?=\s)',body),'No recursive removal during migration'
-assert 'pm clear' not in body and 'pm uninstall' not in s and 'uninstall ' not in s
+assert 'pm clear' not in s
+assert s.count("@('pm','uninstall','ru.local.voyah.fmdiagnostics')")==1
+assert "@('pm','uninstall','ru.local.voyah.fmloader')" not in s
 assert 'stopservice' not in body and 'force-stop' not in body
 with tempfile.TemporaryDirectory(prefix='fm-beta-migrate-') as temp:
  d=pathlib.Path(temp);(d/'mailbox').mkdir();(d/'runtime').mkdir()

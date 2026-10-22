@@ -13,12 +13,13 @@ public class FakeAdbInstall {
   if(args[2]=="root"){Console.WriteLine(mode=="su"||mode=="noroot"?"adbd cannot run as root in production builds":"restarting adbd as root");return mode=="su"||mode=="noroot"?1:0;}
   if(args[2]=="wait-for-device")return 0;
   if(args[2]=="install"){
-   if(mode=="diag-install-fail"&&args[args.Length-1].Contains("diagnostics")){Console.WriteLine("Failure [INSTALL_FAILED_TEST]");return 1;}
+   if(mode=="main-install-fail"){Console.WriteLine("Failure [INSTALL_FAILED_TEST]");return 1;}
    Console.WriteLine("Success");return 0;
   }
   if(args[2]=="push"){
    if(mode=="su"&&File.Exists(Environment.GetEnvironmentVariable("FM_INSTALL_BOOTSTRAP")+".rootstage"))return 40;
    if(args[3].EndsWith("bootstrap.sh"))File.Copy(args[3],Environment.GetEnvironmentVariable("FM_INSTALL_BOOTSTRAP"),true);
+   if(args[3].EndsWith("upload.json"))File.Copy(args[3],Environment.GetEnvironmentVariable("FM_INSTALL_BOOTSTRAP")+".upload",true);
    Console.WriteLine("1 file pushed");return 0;
   }
   if(args[2]!="shell")return 31;
@@ -27,11 +28,19 @@ public class FakeAdbInstall {
   if(cmd=="id -u"){Console.WriteLine(mode=="noroot"||mode=="su"&&!su?"2000":"0");return 0;}
   if(cmd=="getprop ro.build.version.sdk"){Console.WriteLine(mode=="sdk"?"31":"30");return 0;}
   if(cmd=="getenforce"){Console.WriteLine(mode=="enforcing"?"Enforcing":"Permissive");return 0;}
+  if(cmd=="pm path ru.local.voyah.fmdiagnostics"){
+   if(mode=="diag-query-fail"){Console.Error.WriteLine("error: device offline");return 1;}
+   if(mode!="fresh"&&!File.Exists(Environment.GetEnvironmentVariable("FM_INSTALL_BOOTSTRAP")+".diagremoved"))Console.WriteLine("package:/data/app/old-diagnostics/base.apk");return 0;
+  }
+  if(cmd=="pm uninstall ru.local.voyah.fmdiagnostics"){
+   if(mode=="diag-remove-fail"){Console.WriteLine("Failure [DELETE_FAILED_INTERNAL_ERROR]");return 1;}
+   if(mode!="diag-remove-still-present")File.WriteAllText(Environment.GetEnvironmentVariable("FM_INSTALL_BOOTSTRAP")+".diagremoved","removed");Console.WriteLine("Success");return 0;
+  }
   if(cmd.Contains("helper.sh install-components")&&mode=="install-fail"){Console.WriteLine("Failure [INSTALL_FAILED_SHARED_USER_INCOMPATIBLE]");return 1;}
   if(cmd.Contains("helper.sh check")&&mode=="hardware-fail"){Console.WriteLine("ERROR AMBIGUOUS_USB serial_count=0");return 1;}
   if(cmd.StartsWith("sh ")){Console.WriteLine("OK");return 0;}
   if(cmd.StartsWith("mkdir ")&&mode=="su"&&su)File.WriteAllText(Environment.GetEnvironmentVariable("FM_INSTALL_BOOTSTRAP")+".rootstage","root");
-  if(cmd.StartsWith("mkdir ")||cmd.StartsWith("rm ")||cmd.StartsWith("rmdir ")||cmd.StartsWith("am "))return 0;
+  if(cmd.StartsWith("mkdir ")||cmd.StartsWith("chmod ")||cmd.StartsWith("rm ")||cmd.StartsWith("rmdir ")||cmd.StartsWith("am "))return 0;
   return 32;
  }
 }

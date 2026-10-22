@@ -14,7 +14,7 @@ public final class RuntimeFiles {
   if(!new File(BOX,"online").exists())throw new IOException("FM-посредник не запустился. Сохраните отчёт.");
  }
  static synchronized String run(String action) throws Exception {
-  if(!action.matches("check|status|start|stop|install-components|diagnostic|log-start|log-stop"))throw new IllegalArgumentException();
+  if(!action.matches("check|status|start|stop|install-components|diagnostic|log-start|log-stop|ui-start"))throw new IllegalArgumentException();
   String id=UUID.randomUUID().toString();File temp=new File(BOX,"request.tmp"), request=new File(BOX,"request"), response=new File(BOX,id+".reply");
   try(FileOutputStream out=new FileOutputStream(temp)){out.write((id+" "+action+"\n").getBytes("UTF-8"));}
   if(!temp.renameTo(request))throw new IOException("Не удалось отправить запрос FM.");

@@ -1,0 +1,1 @@
+package android.app;public class Service extends android.content.Context {public static final int START_STICKY=1;public void onCreate(){}public void onDestroy(){}public void startForeground(int id,Notification n){}}

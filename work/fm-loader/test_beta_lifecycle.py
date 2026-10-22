@@ -46,6 +46,7 @@ sources={
 }''',
 'ru/local/voyah/fmloader/MainActivity.java':'package ru.local.voyah.fmloader;public class MainActivity{}',
 'ru/local/voyah/fmloader/AppLog.java':'package ru.local.voyah.fmloader;public class AppLog{public static void add(android.content.Context c,String t,String m){}}',
+'ru/local/voyah/fmloader/ReportCoordinator.java':'package ru.local.voyah.fmloader;public class ReportCoordinator{public static void start(android.content.Context c){}public static boolean isCapturing(){return false;}public static boolean tryHealthCheck(){return true;}public static void endHealthCheck(){}public static void shutdown(){}}',
 'ru/local/voyah/fmloader/RuntimeFiles.java':'''package ru.local.voyah.fmloader;public class RuntimeFiles {
  static java.util.List<String> actions=new java.util.ArrayList<>();static boolean logFail,startFail;static int starts;
  static void prepare(android.content.Context c){actions.add("prepare");}

@@ -1,0 +1,1 @@
+package android.content;public class Intent {String action;java.util.Map<String,String> extras=new java.util.HashMap<>();public Intent(String s){action=s;}public Intent(Context c,Class<?> cls){}public String getAction(){return action;}public Intent putExtra(String k,String v){extras.put(k,v);return this;}public String getStringExtra(String k){return extras.get(k);}}

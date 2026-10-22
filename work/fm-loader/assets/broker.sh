@@ -17,7 +17,7 @@ while :; do
         rm -f "$B/request"
         case "$token" in ''|*[!a-zA-Z0-9-]*) continue;; esac
         [ "${#token}" -le 64 ] || continue
-        case "$action:$extra" in check:|status:|start:|stop:|install-components:|diagnostic:|log-start:|log-stop:)
+        case "$action:$extra" in check:|status:|start:|stop:|install-components:|diagnostic:|log-start:|log-stop:|ui-start:)
             sh "$D/helper.sh" "$action" > "$D/reply.body" 2>&1
             code=$?
             if [ "$code" = 0 ]; then echo OK > "$D/reply.new"; else echo ERROR > "$D/reply.new"; fi

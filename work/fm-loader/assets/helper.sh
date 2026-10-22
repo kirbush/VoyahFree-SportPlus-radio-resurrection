@@ -116,7 +116,86 @@ scan_snapshot() {
     done
     echo
 }
+ui_hook_alive() {
+    ui_found=0
+    for ui_p in $(pidof frida-inject); do
+        [ "$(readlink /proc/$ui_p/exe 2>/dev/null)" = "$D/frida-inject" ] || continue
+        ui_cmd=$(tr '\000' ' ' < /proc/$ui_p/cmdline 2>/dev/null)
+        case "$ui_cmd" in "frida-inject -p $ui_pid -s $D/ui.js"*|"$D/frida-inject -p $ui_pid -s $D/ui.js"*)
+            ui_found=$((ui_found+1)); echo "$ui_p" > "$D/ui-injector.pid";;
+        esac
+    done
+    [ "$ui_found" = 1 ]
+}
+stop_ui_injector() {
+    for ui_p in $(pidof frida-inject); do
+        [ "$(readlink /proc/$ui_p/exe 2>/dev/null)" = "$D/frida-inject" ] || continue
+        ui_cmd=$(tr '\000' ' ' < /proc/$ui_p/cmdline 2>/dev/null)
+        case "$ui_cmd" in "frida-inject -p "*" -s $D/ui.js"*|"$D/frida-inject -p "*" -s $D/ui.js"*) kill "$ui_p" 2>/dev/null;; esac
+    done
+    rm -f "$D/ui-injector.pid"
+}
+ensure_ui() {
+    verify "$RD" 36b4d73a889aa78325f6a6ff0c8113c6b13605620a5a4b045209fbff36449cca
+    ui_pid=$(pidof "$RD")
+    if [ -z "$ui_pid" ] && [ "$1" = explicit ]; then
+        am startservice --user 0 -n "$RDS"
+        for ui_n in 1 2 3 4 5; do ui_pid=$(pidof "$RD"); [ -n "$ui_pid" ] && break; sleep 1; done
+    fi
+    case "$ui_pid" in ''|*[!0-9]*) echo UI_WAIT_PROCESS; [ "$1" != explicit ]; return;; esac
+    if ui_hook_alive && [ "$(cat "$D/runtime/ui-ready-$ui_pid" 2>/dev/null)" = 0.5.0-beta-v1 ]; then
+        echo "UI_READY pid=$ui_pid"; return 0
+    fi
+    [ -f "$D/ui.js" ] && [ -f "$D/radio-ui.dex" ] || { echo UI_PAYLOAD_MISSING; return 1; }
+    [ "$(sha256sum "$D/frida-inject" | cut -d' ' -f1)" = 0d99be0e44d4ca3449056fa0a0b868fca1cf66c8ad704508949945afc07706aa ] || { echo UI_INJECTOR_HASH_MISMATCH; return 1; }
+    stop_ui_injector
+    rm -f "$D/runtime/ui-ready-$ui_pid"
+    nohup setsid "$D/frida-inject" -p "$ui_pid" -s "$D/ui.js" > "$D/ui-injector.log" 2>&1 < /dev/null &
+    for ui_n in 1 2 3 4 5 6 7 8 9 10; do [ -f "$D/runtime/ui-ready-$ui_pid" ] && break; sleep 1; done
+    [ "$(cat "$D/runtime/ui-ready-$ui_pid" 2>/dev/null)" = 0.5.0-beta-v1 ] && ui_hook_alive || { echo UI_NOT_READY; return 1; }
+    echo "UI_READY pid=$ui_pid"
+}
+filter_fm_dropbox() {
+    filter='
+      BEGIN {matched=0}
+      /^=/ {keep=0}
+      /^[0-9][0-9][0-9][0-9]-/ {header=$0}
+      /^DROPBOX_EXIT=/ {print;keep=0;next}
+      /^Process:/ {
+        keep=($0 ~ /^Process:[[:space:]]*(com\.pateo\.rdsapp|com\.adayo\.service\.dab|ru\.local\.voyah\.fmloader|ru\.local\.voyah\.fmdiagnostics)([[:space:],:]|$)/)
+        if(keep){matched++;if(header!="")print header}
+      }
+      keep {print}
+      END {if(!matched)print "NO_MATCHING_FM_CRASH_ENTRY"}
+    '
+    if command -v awk >/dev/null 2>&1; then awk "$filter"
+    elif command -v busybox >/dev/null 2>&1; then busybox awk "$filter"
+    else cat >/dev/null; echo CRASH_FILTER_UNAVAILABLE; fi
+}
+crash_snapshot() {
+    echo '=== TARGETED CRASH TEXT / DROPBOX ==='
+    timeout 4 logcat -b crash -d -v threadtime -t 600 > "$D/crash-buffer.tmp" 2>&1
+    if command -v awk >/dev/null 2>&1; then
+        awk 'NR==FNR {if($0 ~ /Process: (com\.pateo\.rdsapp|com\.adayo\.service\.dab|ru\.local\.voyah\.fmloader)(,|[[:space:]])/) own[$3]=1;next} own[$3]{print}' "$D/crash-buffer.tmp" "$D/crash-buffer.tmp" | tail -c 131072
+    elif command -v busybox >/dev/null 2>&1; then
+        busybox awk 'NR==FNR {if($0 ~ /Process: (com\.pateo\.rdsapp|com\.adayo\.service\.dab|ru\.local\.voyah\.fmloader)(,|[[:space:]])/) own[$3]=1;next} own[$3]{print}' "$D/crash-buffer.tmp" "$D/crash-buffer.tmp" | tail -c 131072
+    else echo CRASH_FILTER_UNAVAILABLE; fi
+    rm -f "$D/crash-buffer.tmp"
+    for tag in system_app_crash data_app_crash; do
+        echo "DROPBOX_TAG=$tag"
+        { timeout 5 dumpsys dropbox --print "$tag"; echo "DROPBOX_EXIT=$?"; } 2>&1 | filter_fm_dropbox | tail -c 131072
+    done
+    echo '=== FM UI TASK / FOCUS ==='
+    timeout 4 dumpsys activity activities 2>/dev/null | grep -E 'mResumedActivity|topResumedActivity|ResumedActivity:|taskAffinity=.*(rdsapp|fmloader|fmdiagnostics)|mActivityComponent=.*(rdsapp|fmloader|fmdiagnostics)|launchedFromUid.*(rdsapp|fmloader|fmdiagnostics)' | head -c 32768
+    echo '=== UI ADAPTER ==='
+    cat "$D/ui-injector.pid" 2>/dev/null
+    tail -c 16384 "$D/ui-injector.log" 2>/dev/null
+    echo
+}
 case "$1" in
+ui-start)
+    ensure_ui explicit || fail UI_NOT_READY
+    ;;
 check|status)
     checks
     pid=$(pidof "$AD")
@@ -132,6 +211,7 @@ start)
     sed -e "s|<port_dir>[^<]*</port_dir>|<port_dir>$PORT</port_dir>|" -e "s|<sound_card>[^<]*</sound_card>|<sound_card>$CARD</sound_card>|" "$D/template.xml" > "$D/config.next"
     pid=$(pidof "$AD")
     if [ -n "$pid" ] && [ -f "$D/runtime/used-$pid" ] && [ -f "$D/active" ] && hook_alive && cmp -s "$D/config.next" "$D/config.xml" && hardware_ready; then
+        ensure_ui optional || echo UI_RETRY_PENDING
         echo READY_ALREADY_ACTIVE; exit 0
     fi
     mv "$D/config.next" "$D/config.xml"; chmod 644 "$D/config.xml"
@@ -153,6 +233,7 @@ start)
     for n in 1 2 3 4 5 6 7 8; do hardware_ready && break; sleep 1; done
     hardware_ready || { stop_injector; fail HARDWARE_NOT_OPEN_BY_FM_PROCESS; }
     am startservice --user 0 -n "$RDS"
+    ensure_ui optional || echo UI_RETRY_PENDING
     echo "$pid $PORT $CARD" > "$D/active"
     echo "READY serial=$PORT audio_card=$CARD pid=$pid"
     ;;
@@ -209,7 +290,7 @@ log-stop)
     echo LOG_RECORDING_STOPPED
     ;;
 diagnostic)
-    echo '=== FM BETA 0.4.3 / DEVICE ==='
+    echo '=== FM BETA 0.5.0 / DEVICE ==='
     date; id; getprop ro.build.fingerprint; getprop ro.build.display.id
     getprop ro.product.model; getprop ro.build.version.sdk; uname -a; getenforce
     echo '=== BOOT / SAVED FREQUENCY ==='
@@ -225,6 +306,7 @@ diagnostic)
     for pkg in "$AD" "$RD" ru.local.voyah.fmloader; do
         timeout 4 dumpsys activity exit-info "$pkg" 2>/dev/null | head -100
     done
+    crash_snapshot
     echo '=== USB / DRIVERS ==='
     cat /proc/asound/cards
     ls -l /sys/bus/usb/drivers/cdc_acm /sys/bus/usb/drivers/snd-usb-audio

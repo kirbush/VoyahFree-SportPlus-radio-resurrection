@@ -36,3 +36,4 @@ upload-private.json
 /work/fm-loader/test-build/
 /work/fm-loader/assets/*.apk
 /work/fm-loader/assets/frida-inject
+/work/fm-loader/assets/radio-ui.dex

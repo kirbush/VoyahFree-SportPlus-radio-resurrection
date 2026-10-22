@@ -4,12 +4,12 @@ import android.os.Process;
 import java.io.*;
 import java.net.*;
 public final class LocalBootstrap {
- public static final String VERSION="0.4.3-beta-v1";
+ public static final String VERSION="0.5.0-beta-v1";
  static String quote(String s){return "'"+s.replace("'","'\\''")+"'";}
  public static void activate(Context c)throws Exception {
   AppLog.add(c,"BOOTSTRAP","Trying existing loopback maintenance service");
-  File stage=new File(c.getFilesDir(),"payload-v02");stage.mkdirs();
-  String[] names={"helper.sh","broker.sh","adapter.js","template.xml","frida-inject","AdayoDAB.apk","RdsApp.apk"};
+  File stage=new File(c.getFilesDir(),"payload-v05");stage.mkdirs();
+  String[] names={"helper.sh","broker.sh","adapter.js","ui.js","radio-ui.dex","template.xml","frida-inject","AdayoDAB.apk","RdsApp.apk"};
   for(String name:names)try(InputStream in=c.getAssets().open(name);OutputStream out=new FileOutputStream(new File(stage,name))){byte[] b=new byte[65536];int n;while((n=in.read(b))!=-1)out.write(b,0,n);}
   String d=RuntimeFiles.DIR;
   StringBuilder script=new StringBuilder("#!/system/bin/sh\nset -e\n[ \"$(id -u)\" = 0 ] || exit 81\nD="+d+"\nmkdir -p \"$D/mailbox\"\nchmod 755 \"$D\"\nchown "+Process.myUid()+":"+Process.myUid()+" \"$D/mailbox\"\nchmod 700 \"$D/mailbox\"\n");

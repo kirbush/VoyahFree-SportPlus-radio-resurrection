@@ -1,3 +1,25 @@
+# Current: unified 0.5.0-beta / versionCode 8
+
+One own APK FM Radio; native in-place RDS gear menu, no separate diagnostics APK.
+Original OEM APKs preserved; shared existing RDS/hardware path, not isolated UI copies.
+25 offline groups and actual extracted Windows archive/default fake-ADB installation passed.
+Real installation on owner RUS H97x/build650 passed: original OEM hashes unchanged,
+Adayo PID unchanged, one PCM reader. User manually sent report235502; app SENT/pending0,
+server35718 bytes/sha63a27b059210041bfa85307b804c0b5a3fc4215681d38a0402e69909a92a1106,
+actual server/source bytes identical. No report sent by agent or installer.
+
+Extra report205120 confirms one unique RdsApp DisplayUtils$1 duplicate-observer crash;
+exact-observer guard and task flags added. Report215323 belongs to another tester;
+stored104.9MHz persists across two recorded boots, but last user selection unknown.
+UI first probe Java.choose JNI abort was corrected before final APK; no heap scan now.
+Full frequency/search/sleep acceptance and live7.3.1 remain unconfirmed.
+
+Current release hashes, commands, constraints and detailed findings: root EVIDENCE.md,
+PLAN.md, TODO.md, DECISIONS.md and work/fm-loader/UNIFIED-PLAN.md.
+Private captures/configs/keys remain ignored. Camera/DVR work untouched.
+
+---
+
 ## Latest: upload-only receiver and PC Collect-2, 2026-10-22
 
 User selected their working VPS, supplied SSH access, and explicitly requires only

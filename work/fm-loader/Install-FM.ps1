@@ -1,6 +1,6 @@
-﻿param([string]$Adb='', [string]$Serial='', [string]$Apk=(Join-Path $PSScriptRoot 'Voyah-FM-Radio-0.4.3-beta.apk'), [string]$DiagnosticsApk=(Join-Path $PSScriptRoot 'Voyah-FM-Diagnostics-0.4.3-beta.apk'))
+﻿param([string]$Adb='', [string]$Serial='', [string]$Apk=(Join-Path $PSScriptRoot 'Voyah-FM-Radio-0.5.0-beta.apk'), [string]$UploadConfig=(Join-Path $PSScriptRoot 'upload.json'))
 $ErrorActionPreference='Stop'
-$stage=$null; $archive=$null; $script:UseSu=$false
+$stage=$null; $archive=$null; $remote=$null; $remoteFiles=@(); $privateConfiguration=$null; $script:UseSu=$false
 function Quote-Arg([string]$Value){return '"'+[regex]::Replace([regex]::Replace($Value,'(\\*)"','$1$1\"'),'(\\+)$','$1$1')+'"'}
 function Adb-Call([string[]]$TaskArgs,[int]$Timeout=45000){
     $info=New-Object System.Diagnostics.ProcessStartInfo
@@ -26,9 +26,38 @@ function Root-Run([string[]]$Command,[int]$Timeout=45000){
     $prefix=@('-s',$script:Serial,'shell'); if($script:UseSu){$prefix+=@('su','0')}
     Require-Adb ($prefix+$Command) $Timeout
 }
+function Root-Call([string[]]$Command,[int]$Timeout=45000){
+    $prefix=@('-s',$script:Serial,'shell'); if($script:UseSu){$prefix+=@('su','0')}
+    return Adb-Call ($prefix+$Command) $Timeout
+}
+function Test-LegacyDiagnostics {
+    $result=Root-Call @('pm','path','ru.local.voyah.fmdiagnostics')
+    if($result.Code -eq 0 -and $result.Text -match '(?m)^package:'){return $true}
+    $message=($result.Text+$result.Error).Trim()
+    if($result.Code -in @(0,1) -and (-not $message -or $message -match '^Error: package ru\.local\.voyah\.fmdiagnostics was not found\.?$')){return $false}
+    throw 'LEGACY_DIAGNOSTICS_QUERY_FAILED: cannot verify whether the old diagnostics app remains; retry installation.'
+}
 try {
+    Write-Host 'Voyah FM 0.5.0 beta: one FM Radio app. Files stay in /data.'
+    # Parse privately: JSON parser exceptions may contain values, including the token.
+    if(Test-Path -LiteralPath $UploadConfig -PathType Leaf){
+        try {
+            if((Get-Item -LiteralPath $UploadConfig).Length -gt 16384){throw 'Invalid'}
+            $configuration=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText((Resolve-Path -LiteralPath $UploadConfig).Path))
+            if($configuration.endpoint -isnot [string] -or $configuration.client -isnot [string] -or $configuration.token -isnot [string]){throw 'Invalid'}
+            $uri=New-Object Uri($configuration.endpoint,[UriKind]::Absolute)
+            if($uri.Scheme -ne 'https' -or -not $uri.Host -or $uri.UserInfo -or $uri.Query -or $uri.Fragment -or
+               $uri.AbsolutePath -ne '/voyah-fm/v1' -or $configuration.endpoint.Length -gt 512 -or $configuration.endpoint -match '\s' -or
+               $configuration.client -cnotmatch '^[a-zA-Z0-9_-]{1,64}$' -or
+               $configuration.token -cnotmatch '^[a-zA-Z0-9_-]{32,128}$'){throw 'Invalid'}
+            $privateConfiguration=@{endpoint=$configuration.endpoint;client=$configuration.client;token=$configuration.token}|ConvertTo-Json -Compress
+        } catch {throw 'UPLOAD_CONFIG_INVALID: private configuration rejected; check HTTPS endpoint, client and token.'}
+        Write-Host 'Private upload configuration validated. No report is sent by this installer.'
+    } elseif($PSBoundParameters.ContainsKey('UploadConfig')){throw 'UPLOAD_CONFIG_MISSING: the requested private configuration file does not exist.'}
+    else {Write-Host 'No private upload configuration supplied; existing device configuration is retained.'}
+    # PowerShell transcripts capture parser ErrorRecords even when a catch handles them.
+    # Start only after private JSON validation so malformed input cannot expose a token.
     Start-Transcript -Path (Join-Path $PSScriptRoot ('Install-FM-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.log')) -Force | Out-Null
-    Write-Host 'Voyah FM 0.4.3 beta: Radio + Diagnostics. Files stay in /data.'
     if(-not $Adb){foreach($candidate in @((Join-Path $PSScriptRoot 'adb/adb.exe'),(Join-Path $PSScriptRoot 'adb.exe'),(Join-Path $env:USERPROFILE 'Downloads/ADB_AppControl/adb/adb.exe'))){if(Test-Path -LiteralPath $candidate){$Adb=$candidate;break}}}
     if(-not $Adb){$Adb='adb.exe'}
     $script:AdbExe=(Get-Command $Adb -ErrorAction Stop).Source
@@ -52,31 +81,35 @@ try {
     $r=Adb-Call @('-s',$Serial,'shell','getenforce')
     if($r.Code -ne 0 -or $r.Text.Trim() -ne 'Permissive'){throw 'This tester requires the existing Permissive policy; it does not change SELinux.'}
     $apkPath=(Resolve-Path -LiteralPath $Apk).Path
-    $diagnosticsPath=(Resolve-Path -LiteralPath $DiagnosticsApk).Path
     $hashStream=[System.IO.File]::OpenRead($apkPath); $hasher=[System.Security.Cryptography.SHA256]::Create()
     try {Write-Host ('APK SHA256: '+[System.BitConverter]::ToString($hasher.ComputeHash($hashStream)).Replace('-','').ToLowerInvariant())} finally {$hashStream.Dispose();$hasher.Dispose()}
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive=[System.IO.Compression.ZipFile]::OpenRead($apkPath)
     $stage=Join-Path ([System.IO.Path]::GetTempPath()) ('voyah-fm-install-'+[guid]::NewGuid().ToString('N'))
     [void][System.IO.Directory]::CreateDirectory($stage)
-    $payload=@('helper.sh','broker.sh','adapter.js','template.xml','frida-inject','AdayoDAB.apk','RdsApp.apk')
+    $payload=@('helper.sh','broker.sh','adapter.js','ui.js','radio-ui.dex','template.xml','frida-inject','AdayoDAB.apk','RdsApp.apk')
     foreach($name in $payload){$entry=$archive.GetEntry('assets/'+$name);if(-not $entry){throw ('Missing asset '+$name)};[System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry,(Join-Path $stage $name))}
     foreach($name in @('helper.sh','broker.sh')){
         $scriptBytes=[System.IO.File]::ReadAllBytes((Join-Path $stage $name))
         if([Array]::IndexOf($scriptBytes,[byte]13) -ge 0){throw ('ANDROID_SCRIPT_CRLF_NOT_ALLOWED: '+$name)}
         if($scriptBytes.Length -ge 3 -and $scriptBytes[0] -eq 239 -and $scriptBytes[1] -eq 187 -and $scriptBytes[2] -eq 191){throw ('ANDROID_SCRIPT_BOM_NOT_ALLOWED: '+$name)}
+        if($scriptBytes.Length -lt 17 -or [Text.Encoding]::ASCII.GetString($scriptBytes,0,17) -cne "#!/system/bin/sh`n"){throw ('ANDROID_SCRIPT_SHEBANG_INVALID: '+$name)}
     }
+    if($privateConfiguration){[IO.File]::WriteAllText((Join-Path $stage 'upload.json'),$privateConfiguration,[Text.UTF8Encoding]::new($false))}
     Write-Host 'Installing FM Radio...'; Require-Adb @('-s',$Serial,'install','-r',$apkPath) 180000
     Write-Host 'The old FM Tester APK is replaced in place; station settings and saved reports are retained.'
-    Write-Host 'Installing FM Diagnostics...'; Require-Adb @('-s',$Serial,'install','-r',$diagnosticsPath) 180000
     # Stop only our app during deployment; never stop Adayo or RDS.
     Root-Run @('am','force-stop','--user','0','ru.local.voyah.fmloader')
     $remote='/data/local/tmp/voyah-fm-upload-'+[guid]::NewGuid().ToString('N')
+    $remoteFiles=$payload+@('bootstrap.sh'); if($privateConfiguration){$remoteFiles+=@('upload.json')}
     # Upload directory must belong to the same adbd UID that performs adb push.
     Require-Adb @('-s',$Serial,'shell','mkdir','-p',$remote)
+    Require-Adb @('-s',$Serial,'shell','chmod','700',$remote)
     foreach($name in $payload){Require-Adb @('-s',$Serial,'push',(Join-Path $stage $name),($remote+'/'+$name))}
+    if($privateConfiguration){Require-Adb @('-s',$Serial,'push',(Join-Path $stage 'upload.json'),($remote+'/upload.json'))}
     $bootstrap=@'
 set -e
+umask 077
 [ "$(id -u)" = 0 ] || exit 81
 echo BOOT_ROOT_CHANNEL_CHECK
 getprop init.svc.logcat_sdcard
@@ -133,21 +166,37 @@ for kind in ready used reloaded error; do
 done
 echo LEGACY_TESTER_MIGRATION_OK
 # END FM BETA MIGRATION
-for name in helper.sh broker.sh adapter.js template.xml frida-inject AdayoDAB.apk RdsApp.apk; do
+for name in helper.sh broker.sh adapter.js ui.js radio-ui.dex template.xml frida-inject AdayoDAB.apk RdsApp.apk; do
  if ! cmp -s "$S/$name" "$D/$name"; then cp "$S/$name" "$D/$name"; fi
  chown 0:0 "$D/$name"
  chmod 644 "$D/$name"
 done
 chmod 755 "$D/frida-inject"
-echo 0.4.3-beta-v1 > "$D/payload-version"
+echo 0.5.0-beta-v1 > "$D/payload-version"
 chmod 644 "$D/payload-version"
+__INSTALL_UPLOAD__
 exec 0</dev/null
 nohup setsid sh "$D/broker.sh" > "$D/broker.log" 2>&1 < /dev/null &
 sleep 1
 [ -f "$D/mailbox/online" ] || exit 83
 echo BROKER_ACTIVATED
 '@
-    $bootstrap=$bootstrap.Replace('__UPLOAD__',$remote).Replace("`r",'')+"`n"
+    $installUpload=''
+    if($privateConfiguration){$installUpload=@'
+# BEGIN FM UPLOAD CONFIG
+F=/data/user/0/ru.local.voyah.fmloader/files
+mkdir -p "$F"
+chown "$uid:$uid" "$F"
+chmod 700 "$F"
+cp "$S/upload.json" "$F/.upload.json.install"
+chown "$uid:$uid" "$F/.upload.json.install"
+chmod 600 "$F/.upload.json.install"
+mv -f "$F/.upload.json.install" "$F/upload.json"
+restorecon "$F/upload.json" 2>/dev/null || true
+echo UPLOAD_CONFIG_INSTALLED
+# END FM UPLOAD CONFIG
+'@}
+    $bootstrap=$bootstrap.Replace('__UPLOAD__',$remote).Replace('__INSTALL_UPLOAD__',$installUpload).Replace("`r",'')+"`n"
     $bootstrapPath=Join-Path $stage 'bootstrap.sh'
     [System.IO.File]::WriteAllText($bootstrapPath,$bootstrap,[System.Text.UTF8Encoding]::new($false))
     Require-Adb @('-s',$Serial,'push',$bootstrapPath,($remote+'/bootstrap.sh'))
@@ -156,17 +205,29 @@ echo BROKER_ACTIVATED
     Root-Run @('sh','/data/local/tmp/voyah-fm-loader-v1/helper.sh','log-start')
     Root-Run @('sh','/data/local/tmp/voyah-fm-loader-v1/helper.sh','install-components') 180000
     Root-Run @('sh','/data/local/tmp/voyah-fm-loader-v1/helper.sh','check')
+    # Remove only our obsolete separate UI after the main package and payload succeed.
+    if(Test-LegacyDiagnostics){
+        Write-Host 'Removing the old separate FM Diagnostics app...'
+        $removed=Root-Call @('pm','uninstall','ru.local.voyah.fmdiagnostics') 90000
+        $remaining=Test-LegacyDiagnostics
+        if($removed.Code -ne 0 -or $removed.Text.Trim() -ne 'Success' -or $remaining){
+            throw 'LEGACY_DIAGNOSTICS_REMOVE_FAILED: FM Radio is installed; retry installation to finish removing the old diagnostics app.'
+        }
+    }
     Root-Run @('am','start','--user','0','-n','ru.local.voyah.fmloader/.MainActivity')
-    foreach($name in ($payload+@('bootstrap.sh'))){Root-Run @('rm','-f',($remote+'/'+$name))};Root-Run @('rmdir',$remote)
     Write-Host 'INSTALL_OK. FM Radio opens the OEM radio screen. Automatic logging and boot startup are enabled.'
-    Write-Host 'For a report: open FM Diagnostics and press Save ZIP. Recording continues. PC-Export copies the ZIP to a chosen PC folder.'
+    Write-Host 'For reports: use the gear menu on the radio screen. Save ZIP keeps a local copy; Send report uploads when configured. Recording continues.'
+    Write-Host 'No report was sent by the installer. Collect-FM-now.cmd can create a new report directly on the PC.'
     Write-Host 'Test radio after reboot and after locking the vehicle; keep the report if frequency or sound is lost.'
 } catch {
     Write-Host ('INSTALL_FAILED: '+$_)
-    if($script:Serial -and $script:AdbExe){try{[void](Adb-Call @('-s',$script:Serial,'shell','am','start','--user','0','-n','ru.local.voyah.fmdiagnostics/.MainActivity'))}catch{}}
     exit 1
 } finally {
     if($archive){$archive.Dispose()}
+    if($remote -match '^/data/local/tmp/voyah-fm-upload-[0-9a-f]{32}$'){
+        foreach($name in $remoteFiles){try{[void](Root-Call @('rm','-f',($remote+'/'+$name)))}catch{}}
+        try{[void](Root-Call @('rmdir',$remote))}catch{}
+    }
     if($stage){
         $resolved=[System.IO.Path]::GetFullPath($stage);$temp=[System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
         if($resolved.StartsWith($temp,[StringComparison]::OrdinalIgnoreCase) -and (Split-Path $resolved -Leaf) -match '^voyah-fm-install-[0-9a-f]{32}$'){Remove-Item -LiteralPath $resolved -Recurse -Force}

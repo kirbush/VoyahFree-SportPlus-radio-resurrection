@@ -1,0 +1,1 @@
+package android.content;public abstract class BroadcastReceiver {public String resultData;public abstract void onReceive(Context c,Intent i);public void setResultData(String s){resultData=s;}public void setResultCode(int i){}}
