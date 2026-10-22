@@ -12,7 +12,6 @@ files={
  'Voyah-FM-Radio-0.5.1-beta.apk':O/'Voyah-FM-Radio-0.5.1-beta.apk',
  'Install-FM.cmd':P/'Install-FM.cmd','Install-FM.ps1':P/'Install-FM.ps1',
  'ИНСТРУКЦИЯ.txt':P/'BETA-START-HERE.txt',
- 'ПЛАН ПРОВЕРКИ.txt':P/'BETA-TEST-PLAN.txt',
  'Export-All-FM-logs.cmd':P/'Export-All-FM-logs.cmd',
  'Details/TECHNICAL-NOTES.txt':P/'BETA-TECHNICAL-NOTES.txt',
  'Details/OFFLINE-CHECKS.json':W/'fm-loader-validation/offline-0.5.1-tests.json',

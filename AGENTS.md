@@ -16,3 +16,5 @@
 - Do not run scripts ending in `_device.py` or other live-control scripts merely to validate a source change. Local release tests use fake ADB.
 
 - OEM MediaProvider breaks the pending-to-published Downloads rename. Manual ZIP export writes the final name and verifies content-URI length/SHA256; do not reintroduce that rename without live evidence.
+
+- Tester installation and acceptance steps belong in the single BETA-START-HERE.txt source, shipped as ИНСТРУКЦИЯ.txt. Do not split out another tester plan.

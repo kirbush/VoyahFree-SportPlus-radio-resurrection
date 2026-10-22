@@ -26,7 +26,7 @@
 
 - [work/fm-loader](work/fm-loader) — основное приложение, root-помощник, адаптер, установщик, сборка и тесты.
 - [work/fm-diagnostics](work/fm-diagnostics) — исходники прежней отдельной диагностики; в 0.5.0 её APK не поставляется.
-- [Инструкция](work/fm-loader/BETA-START-HERE.txt) и [план проверки](work/fm-loader/BETA-TEST-PLAN.txt) — для тестера с готовым пакетом.
+- [Установка и проверка](work/fm-loader/BETA-START-HERE.txt) — один файл для тестера с готовым пакетом.
 - [PLAN.md](PLAN.md), [TODO.md](TODO.md), [DECISIONS.md](DECISIONS.md), [EVIDENCE.md](EVIDENCE.md) — актуальное состояние проекта.
 - [Подробная история](work/FM-BETA-STATE.md) — результаты предыдущих этапов.
 

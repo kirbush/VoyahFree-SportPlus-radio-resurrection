@@ -16,6 +16,8 @@ with tempfile.TemporaryDirectory(prefix='fm-beta-shipped-') as temp:
   for name,h in hashes.items():assert hashlib.sha256((package/name).read_bytes()).hexdigest()==h
   assert [n for n in z.namelist() if n.endswith('.apk')]==['Voyah-FM-Radio-0.5.1-beta.apk']
   assert 'upload.json' not in z.namelist()
+  assert 'ПЛАН ПРОВЕРКИ.txt' not in z.namelist()
+  assert z.read('ИНСТРУКЦИЯ.txt')==(P/'BETA-START-HERE.txt').read_bytes()
   for name in ['Collect-FM-now.cmd','Collect-FM-now.ps1','Collect-FM-state.sh','Upload-FM-report.ps1','upload.example.json']:assert (package/name).read_bytes()==(P/name).read_bytes()
  validate_apk_shells(package/'Voyah-FM-Radio-0.5.1-beta.apk')
  with zipfile.ZipFile(package/'Voyah-FM-Radio-0.5.1-beta.apk') as z:
