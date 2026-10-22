@@ -18,3 +18,5 @@
 - OEM MediaProvider breaks the pending-to-published Downloads rename. Manual ZIP export writes the final name and verifies content-URI length/SHA256; do not reintroduce that rename without live evidence.
 
 - Tester installation and acceptance steps belong in the single BETA-START-HERE.txt source, shipped as ИНСТРУКЦИЯ.txt. Do not split out another tester plan.
+
+- Send report creates its ZIP automatically. Manual Save ZIP is auxiliary; never make it a required step before sending logs.
