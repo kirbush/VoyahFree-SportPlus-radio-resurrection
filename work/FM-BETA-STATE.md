@@ -1,3 +1,108 @@
+## Latest: GitHub download and proposed automatic upload, 2026-10-22
+
+User explicitly requests publishing PC collector ZIP to GitHub for direct download
+because Gmail blocks the executable-containing archive. Only reviewed standalone
+ZIP is added under downloads/ plus short README/link; source/diagnostic findings
+are included in the same update. Keys, raw tester reports/videos, firmware images,
+proprietary OEM APKs and other outputs remain excluded. Archive unchanged:
+3216422bytes SHA256810ee143a2a33aef9b85f1f88c6721617db9ee5e9f3f672bb147aa20e0d07571.
+Git CLI authenticated push dry-run succeeded via existing credential helper; no new
+authentication/permission needed. Verify published download SHA before sharing link.
+
+User also asks about automatic upload from HU and attached PC to their server.
+Proposed common HTTPS receiver with offline queue/retry, independent of FM UI;
+PC can upload at USB collection. Must first improve useful diagnostic capture
+(existing header-only native log issue), not merely send empty logs automatically.
+Asked user for existing HTTPS upload URL vs server/VPS needing receiver deployment;
+reply pending. No endpoint configured or external diagnostic data transmitted.
+
+## Previous: standalone PC collector for second tester, 2026-10-22
+
+Pause FM did not help access Diagnostics. Third video20261022_192514.mp4(21.824s,
+SHA25666f9d676f8411ee613bcd2366493d27c640c3ef657622f4652ab05758e0c8d4b)
+shows Diagnostics task row disappearing after close, then reappearing after seconds.
+Do not infer exact initiator/process crash from task-manager video alone.
+
+Prepared outputs/Voyah-FM-PC-Collect-1.zip,3216422bytes,
+SHA256810ee143a2a33aef9b85f1f88c6721617db9ee5e9f3f672bb147aa20e0d07571.
+Standalone bundle has Collect-FM-now.cmd/.ps1, Collect-FM-state.sh, bundled official
+ADB/DLL/NOTICE and four-step Russian instruction. User extracts/connectsUSB/runsCMD/
+choosesPCfolder; fresh Voyah-FM-PC-report timestamp ZIP written atomically on PC.
+No diagnostic UI or pre-existing report required. No APK install, frequency/scan/
+autoplay call, app/service stop/restart or firmware write. Existing beta0.4.3 APKs
+and release archive unchanged. Existing root/su preferred; adb root fallback; limited
+report explicit if no root. Remote shell passed inline with POSIX quoting, not pushed.
+Preserves UTF8, rejects CR/BOM Android payload, rejects incomplete/failed transfer,
+preserves existing ZIP and verifies Windows temp cleanup target.
+
+Reads before/after Activity/window stacks, own existing events, existing helper
+diagnostic action, own/RDS exit-info, crash buffer, FM-only DropBox blocks (includes
+Diagnostics), logger configuration/processes. Each external dump bounded; helper
+busy retry is read-only. DropBox emits exit/empty markers; no unrelated blocks.
+Full audio/FM lifecycle deliberately unchanged pending second tester report.
+
+TDD regression first failed missing collector; real Windows tests cover11ADB modes,
+actual CMD success/failure, quotes/Unicode/no-clobber, raw script bytes; real shell
+fixtures cover helper present/missing, targeted/empty crash filter, no control calls.
+Reviewer pc_collector_review found hanging su probe blocking fallback; failing test
+reproduced, optional root probes now catch bounded timeout. Reviewer independently
+reran all tests, no remaining important finding. Full suite19groups and extracted
+standalone-archive tests are release checks. Evidence work/fm-loader-validation/
+pc-collect-tests.json,pc-collect-package.json; verify_offline.py includes new group.
+No real ADB/device call. Next: tester runs collector, sends ZIP; analyze before new
+radio APK/revised simplified test plan. No claim foreground-loop cause fixed.
+
+## Previous: second tester blocked from diagnostic UI, 2026-10-22
+
+User says second tester is still on current release; collect his logs before new
+release/simplified test plan. Supplied videos19-13-20(24.382s)/19-15-58(20.129s)
+are SECOND tester, not paired with first tester ZIP200936/202821. Firmware unknown.
+Read-only ffprobe/frames analysis under work/fm-video-review-20261022-1913-1915.
+First clip11.5->12.5s: launches FM Diagnostics from app list, diagnostic UI/status
+appears briefly in transition, then radio grid106.6ENERGY becomes visible again.
+Second clip6->14s: task manager lists FM Diagnostics; tester closes that row, not
+FM backend. Video cannot establish diagnostic crash vs external radio Activity/
+window-policy behavior. Own diagnostics has no automatic radio launch on status.
+No app/device change. Asked pause-FM then open Diagnostics/save ZIP; reply pending.
+Current Export-All-FM-logs only copies an existing ZIP. If pause does not permit UI,
+need PC-side collection without diagnostic UI; do not stop/restart Adayo service.
+
+## Previous: paired live 0.4.3 reports before/after parking, 2026-10-22
+
+User supplied reports 200936 (SHA256 e64715abc5609cddded40555d9573a32872484a3c9cbc56016bb147ea205f2dc)
+and 202821 (SHA256 48f2849062f3ba0044049c8566367f7e77b96fb7321e3233d8855ed8f6375c92).
+Both are 0.4.3, UID10096, EB/build18 OTA7.2_0430. Device clock GMT+05, not Moscow.
+Local raw extraction/analysis: work/fm-report-analysis-20261022-2009-2028.
+Key comparisons verified programmatically in comparison.json; full ANALYSIS.txt.
+
+Same boot_id 85306b0b-a0e5-43cc-a1a8-6c9a9294b29a, uptime1016.55->2141.19;
+no complete reboot between snapshots; actual depth of sleep is not measured.
+Same AdayoPID21494, one PCM reader, USB captureRunning48000/stereo, live UART/PCM
+fds, active config adapter. One serial_count0 failure20:14:12 recovers; USB topology
+changes xhci.1/usb2 -> xhci.0/usb1. Do not "fix" by restarting Adayo service.
+
+Confirmed four RdsApp crashes20:08:55.697/20:10:23.891/20:12:08.154/20:12:20.651;
+first three occur0.582/0.586/0.564sec after own RADIO_OPEN. First crash predates
+first report, so not a wake-only fault. Exact exception/stack unavailable.
+Both capture.log snapshots have only3 beginning-of-main headers, no event records.
+LOG_ALREADY_RECORDING currently detects process, not useful logs. Need independent
+crash text source (targeted DropBox/crash buffer) and empty-log configuration checks.
+
+AudioFlinger underruns grow and tracks re-add; do not claim audible steady-state
+stutter or select audio fix without knowing scan/tune activity. At SECOND snapshot
+FM PlaybackState2/Active=no while YandexMusic state3/Active=yes; cannot claim ongoing
+FM audio acceptance from that snapshot. Frequencies104.9->106.9 agree in preferences,
+Binder current station and metadata. Lists30->19/favorites1->9; settings not empty,
+but last-before-lock frequency unknown and full scan cycle absent. User asked analysis
+and whether fixes needed, not implementation. No code/device changes. User replies:
+tester noticed no problem and favorites/hearts survived. This does not identify
+last-before-lock frequency or scan/tune actions. Yandex Music auto-start is configured
+in Tweaks, so paused FM is expected and not a defect. User doubts completeness of
+tester recollection; do not claim audible stutter/visible crash or dismiss recorded
+APP CRASH entries. Prioritize diagnostic completeness/exception stack; no speculative
+audio, frequency or autoplay change from these reports.
+Root EVIDENCE/TODO/PLAN updated with sanitized facts. Raw tester files stay out of Git.
+
 ## Repository transition, 2026-10-22
 
 User selected https://github.com/kirbush/VoyahFree-SportPlus-radio-resurrection.

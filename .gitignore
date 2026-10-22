@@ -9,6 +9,10 @@
 !/TODO.md
 !/DECISIONS.md
 !/EVIDENCE.md
+!/downloads/
+/downloads/*
+!/downloads/README.md
+!/downloads/Voyah-FM-PC-Collect-1.zip
 !/work/
 /work/*
 !/work/fm-loader/

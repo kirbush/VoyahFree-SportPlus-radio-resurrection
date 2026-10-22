@@ -2,6 +2,7 @@ import pathlib,subprocess,sys,json,concurrent.futures,tempfile
 p=pathlib.Path(__file__).resolve().parent;w=p.parent;out=w/'fm-loader-validation';out.mkdir(exist_ok=True)
 node=pathlib.Path(r'C:/Users/Кирилл/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe')
 commands={n:[sys.executable,str(p/n)] for n in ['test_contract.py','test_install_offline.py','test_health_offline.py','test_mailbox_offline.py','test_reports_offline.py','test_pc_export.py','test_installer_offline.py','test_beta_offline.py','test_beta_lifecycle.py','test_beta_migration.py','test_scan_diagnostics.py','test_installer_fd_compat.py','test_android_payload_format.py']}
+commands['test_pc_collect.py']=[sys.executable,str(p/'test_pc_collect.py')]
 commands['adapter']=[str(node),str(p/'test_adapter.js')]
 commands['helper-syntax']=['C:/Program Files/Git/bin/bash.exe','-n',str(p/'assets/helper.sh')]
 commands['broker-syntax']=['C:/Program Files/Git/bin/bash.exe','-n',str(p/'assets/broker.sh')]
