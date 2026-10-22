@@ -50,7 +50,7 @@ public final class TestAndroidUpload {
   base=new File(args[0]);base.mkdirs();System.setProperty("fm.test.context",new File(base,"service").getPath());KeyStore keys=KeyStore.getInstance("PKCS12");try(InputStream in=new FileInputStream(args[1])){keys.load(in,"test-only-password".toCharArray());}
   KeyManagerFactory km=KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());km.init(keys,"test-only-password".toCharArray());SSLContext ssl=SSLContext.getInstance("TLS");ssl.init(km.getKeyManagers(),null,null);
   server=HttpsServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(),0),0);server.setHttpsConfigurator(new HttpsConfigurator(ssl));server.createContext("/voyah-fm/v1/reports/",TestAndroidUpload::receive);server.createContext("/voyah-fm/v1/redirect",e->{redirects++;e.sendResponseHeaders(500,-1);e.close();});server.start();endpoint="https://localhost:"+server.getAddress().getPort()+"/voyah-fm/v1";
-  try{queue();untrusted(args[2]);healthGate();coordinator();automaticRetention();System.out.println("PASS Android HTTPS protocol, strict receipts, offline retry, persistence, bounds, coordinator and ordered menu commands, bounded automatic sources");}finally{ReportCoordinator.shutdown();server.stop(0);}
+  try{queue();untrusted(args[2]);healthGate();coordinator();downloadsCompatibility();automaticRetention();System.out.println("PASS Android HTTPS protocol, strict receipts, offline retry, persistence, bounds, coordinator and ordered menu commands, bounded automatic sources, Downloads publication and byte verification");}finally{ReportCoordinator.shutdown();server.stop(0);}
  }
  static void queue()throws Exception{
   reject("{\"endpoint\":\"http://localhost/voyah-fm/v1\",\"client\":\"tester\",\"token\":\""+TOKEN+"\"}");
@@ -97,7 +97,7 @@ public final class TestAndroidUpload {
   LoaderService service=new LoaderService();int actionCount=RuntimeFiles.actions.size();service.tick();check(RuntimeFiles.actions.size()==actionCount,"Health tick ran during diagnostic capture");
   RuntimeFiles.block.countDown();idle(c);check(c.downloads.size()==1,"Manual save not copied to Downloads");check(c.startedActivities==0&&calls==before,"Save opened Activity or uploaded");
   JSONObject saved=ReportCoordinator.command(c,"status");check(!saved.getString("lastReport").isEmpty()&&"SAVED".equals(saved.getString("status")),"Save result missing");
-  try(ZipFile z=new ZipFile(new File(c.getFilesDir(),saved.getString("lastReport")))){String diagnostic=read(z,"diagnostics.txt"),env=read(z,"environment.txt");check(diagnostic.contains("CRASH_TEXT_SENTINEL")&&env.contains("0.5.0-beta"),"Crash evidence or current version absent");}
+  try(ZipFile z=new ZipFile(new File(c.getFilesDir(),saved.getString("lastReport")))){String diagnostic=read(z,"diagnostics.txt"),env=read(z,"environment.txt");check(diagnostic.contains("CRASH_TEXT_SENTINEL")&&env.contains("0.5.1-beta"),"Crash evidence or current version absent");}
   write(new File(c.getFilesDir(),"upload.json"),"{\"endpoint\":\""+endpoint+"\",\"client\":\"tester\",\"token\":\""+TOKEN+"\"}");mode="offline";ReportCoordinator.command(c,"send");idle(c);check("QUEUED".equals(ReportCoordinator.command(c,"status").getString("status")),"Offline report not queued");
   mode="valid";ReportCoordinator.command(c,"send");idle(c);s=ReportCoordinator.command(c,"status");check("SENT".equals(s.getString("status"))&&s.getBoolean("configured"),"Send did not retry and acknowledge");
   for(String action:RuntimeFiles.actions)check(action.equals("diagnostic"),"Hardware action from report subsystem: "+action);
@@ -128,6 +128,23 @@ public final class TestAndroidUpload {
   ReportCoordinator.shutdown();Context huge=new Context(new File(base,"auto-source-limit"));byte[] noise=new byte[8192];Random random=new Random(1);try(OutputStream out=new FileOutputStream(new File(huge.getFilesDir(),"events.log"))){for(int i=0;i<2176;i++){random.nextBytes(noise);out.write(noise);}}
   try{DiagnosticReport.createAutomatic(huge,"oversize automatic report");throw new AssertionError("Oversize automatic source accepted");}catch(IOException expected){}
   check(sourceReports(huge)==0&&new File(huge.getFilesDir(),"automatic-report-source").isFile(),"Oversize automatic source escaped tracking or size bound");for(File f:huge.getFilesDir().listFiles())check(!f.getName().endsWith(".partial"),"Oversize automatic partial retained");
+ }
+ static void downloadsCompatibility()throws Exception{
+  ReportCoordinator.shutdown();int before=calls;
+  for(String scenario:new String[]{"oem-publication","corrupt-readback","write-failed"}){
+   Context c=new Context(new File(base,"downloads-"+scenario));c.brokenPendingPublication=true;
+   c.corruptDownloadReadback=scenario.equals("corrupt-readback");c.failDownloadWrite=scenario.equals("write-failed");
+   try{
+    ReportCoordinator.command(c,"save");idle(c);JSONObject state=ReportCoordinator.command(c,"status");
+    File original=new File(c.getFilesDir(),state.getString("lastReport"));check(original.isFile(),"Save failure deleted internal report: "+scenario);
+    if(scenario.equals("oem-publication")){
+     check("SAVED".equals(state.getString("status")),"OEM Downloads publication failure: a readable ZIP must save without the broken pending rename");
+     check(c.downloads.size()==1&&Integer.valueOf(0).equals(c.downloadPending.values().iterator().next()),"ZIP not published in Downloads");
+     check(Arrays.equals(Files.readAllBytes(original.toPath()),c.downloads.values().iterator().next().toByteArray()),"Saved Downloads ZIP differs from source");
+    }else{check("ERROR".equals(state.getString("status")),"Unverified or failed Downloads copy reported success: "+scenario);check(c.downloads.isEmpty(),"Failed public copy not removed: "+scenario);}
+    check(c.startedActivities==0&&calls==before,"Save opened Activity or transmitted a report");
+   }finally{ReportCoordinator.shutdown();}
+  }
  }
  static String read(ZipFile z,String name)throws Exception{try(InputStream in=z.getInputStream(z.getEntry(name));ByteArrayOutputStream out=new ByteArrayOutputStream()){byte[] b=new byte[1024];int n;while((n=in.read(b))!=-1)out.write(b,0,n);return out.toString("UTF-8");}}
 }

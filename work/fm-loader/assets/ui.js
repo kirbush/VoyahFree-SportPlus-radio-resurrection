@@ -1,5 +1,5 @@
 'use strict';
-const UI_VERSION='0.5.0-beta-v1';
+const UI_VERSION='0.5.1-beta-v1';
 const UI_DIR='/data/local/tmp/voyah-fm-loader-v1';
 function registerDisplayObserver(original,target,observer){
   if(observer && String(observer.getClass().getName())==='com.qinggan.media.helper.utils.DisplayUtils$1'){

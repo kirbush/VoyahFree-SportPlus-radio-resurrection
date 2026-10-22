@@ -36,7 +36,7 @@ public class MainActivity extends Activity {
   status=new TextView(this);status.setText("FM Радио\nПодключение…");status.setTextColor(Color.WHITE);status.setTextSize(23);status.setGravity(Gravity.CENTER);root.addView(status);
   Button settings=new Button(this);settings.setText("Настройки FM");settings.setOnClickListener(v->MenuBridge.showSettings(this));root.addView(settings);
   setContentView(root);getSharedPreferences("fm",0).edit().putBoolean("boot",true).apply();
-  AppLog.add(this,"RADIO_OPEN","beta 0.5.0");began=SystemClock.elapsedRealtime();
+  AppLog.add(this,"RADIO_OPEN","beta 0.5.1");began=SystemClock.elapsedRealtime();
   try{startForegroundService(new Intent(this,LoaderService.class));}catch(Exception e){status.setText("Не удалось подключить радио. Откройте настройки FM.");AppLog.add(this,"START_ERROR",e.getClass().getSimpleName());}
  }
  protected void onResume(){super.onResume();resumed=true;handler.post(refresh);}

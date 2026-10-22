@@ -6,7 +6,7 @@ import java.util.concurrent.*;
 public class LoaderService extends Service {
  public static volatile boolean ready;
  ScheduledExecutorService executor; volatile boolean stopped; final RetrySchedule retry=new RetrySchedule();
- public void onCreate(){super.onCreate();ready=false;AppLog.add(this,"CORE_CREATED","beta 0.5.0 auto recording enabled");
+ public void onCreate(){super.onCreate();ready=false;AppLog.add(this,"CORE_CREATED","beta 0.5.1 auto recording enabled");
   NotificationManager nm=getSystemService(NotificationManager.class);
   nm.createNotificationChannel(new NotificationChannel("fm","FM Радио",NotificationManager.IMPORTANCE_LOW));
   PendingIntent pi=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);

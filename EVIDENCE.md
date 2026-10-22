@@ -1,3 +1,19 @@
+# 0.5.1: Save ZIP и эталон кнопок руля, 23.10.2026
+
+На собственном RUS H97x/build650 воспроизведена ошибка «Сохранить ZIP». Приватный ZIP создаётся. MediaProvider принимает insert/openOutputStream, но update IS_PENDING=0 возвращает0: файл переименован из .pending-* в окончательное имя, БД оставляет прежний путь, чтение старого URI даёт ENOENT. Журнал: Moving ...; Requested path .../Download/... doesn't appear under [DCIM, Movies, Music, Pictures]. Файлы могли фактически остаться в Downloads даже при ERROR.
+
+До изменений APK на том же ГУ проверена запись через Downloads URI без IS_PENDING: pending0, URI читается,119939байт/SHA256 `1311023ed512aac610253ec6d3ec6fa8cab915dc93ace61db30e5b246d0e14c1` совпадают с приватным исходником. Системные разрешения/файлы/Tweaks не менялись. Точечные диагностические инжекторы core удалены, Adayo/RDS PID сохранились до отключения.
+
+0.5.1/code9 пишет финальное имя, закрывает поток и перечитывает URI, сверяя длину/SHA256. При ошибке удаляет свою публичную копию, приватный ZIP сохраняется. Регрессия сначала упала на0.5.0 с OEM publication failure, затем прошла. Проверены также повреждённое чтение/ошибка записи/очистка/сохранение исходника/отсутствие upload и Activity. Все25групп и установка из готового Windows-архива с fake ADB root/su/fresh/default-config прошли. Персональные архивы обоих тестеров отдельно распакованы и проверены с их реальными конфигурациями через fake ADB; ключи в вывод не попали, сами архивы вне Git.
+
+**Новый APK0.5.1 на автомобиль ещё не установлен.** ADB пропал, пользователь подтвердил «Пока без машины». Живая проба альтернативного API и локальные тесты не заменяют проверку кнопки нового APK после установки.
+
+Рабочий русский эталон руля: пользователь подтвердил переключение и отправил `Voyah-FM-report-20261023-001556.zip`,119939байт, SHA сверена. В00:14:25.548 RdsPlayer.onSkipToNext →RdsManager.playStation Freq8790 →DABService.playRadio →onCurrentStationUpdate8790; есть Previous. Китайские205120/215323 уже выбирают RDS media-button session с теми же active=false/flags3/state3/actions0. Эти флаги не объясняют отказ. В китайских файлах нет подтверждённой специальной проверки кнопок; отсутствие callback пока не доказывает точку потери. Добавлен тест3Next/3Previous+немедленная отправка. Текущего RdsPlayer:V/media_session достаточно для первого разделения; при отсутствии callback нужен отдельный журнал OEM key router. Сон/китайский маршрут не исправлялись.
+
+Публичный ZIP0.5.1: 43484628байт, SHA256 `39316e29a6c68fda71dad480dc01259b4c415b926e4c774bdb97755e10d5136b`. APK: 41231573байт, SHA256 `4c68db8eafd279a7300261a190a03ede1d869944833e6e6252eed53f8368a49d`, прежний signer, OEM APK побайтно сохранены. Локальные подтверждения: work/fm-unified-device/save-*.txt, steering-*.txt, work/fm-loader-validation/offline-0.5.1-tests.json и personal-tester-packages-0.5.1.json; сырые данные вне Git.
+
+---
+
 # Текущая бета 0.5.0: одно приложение, 22.10.2026
 
 Разобраны дополнительные отчёты 0.4.3 двух разных автомобилей. PC205120 (SHA-256 `27b4c8ebf230acf6bd2b50e7708763b765bfe95ec20bb4fdb1202bb0421b954f`) содержит один уникальный crash RdsApp, продублированный в crash buffer/DropBox: `IllegalStateException: Observer com.qinggan.media.helper.utils.DisplayUtils$1 ... is already registered`. Стек проходит через Observable/MultiDisplayObservable/DisplayUtils.registerDisplayChange и отложенный callback MainActivity.onCreate. В задаче с идентичностью FM Диагностики находилась только RdsApp MainActivity, запущенная fmloader; это подтверждает проблему размещения Activity, а не падение самой диагностики.

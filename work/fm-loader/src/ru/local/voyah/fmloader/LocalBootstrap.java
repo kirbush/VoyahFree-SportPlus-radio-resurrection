@@ -4,7 +4,7 @@ import android.os.Process;
 import java.io.*;
 import java.net.*;
 public final class LocalBootstrap {
- public static final String VERSION="0.5.0-beta-v1";
+ public static final String VERSION="0.5.1-beta-v1";
  static String quote(String s){return "'"+s.replace("'","'\\''")+"'";}
  public static void activate(Context c)throws Exception {
   AppLog.add(c,"BOOTSTRAP","Trying existing loopback maintenance service");

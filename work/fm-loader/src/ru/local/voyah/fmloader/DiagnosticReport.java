@@ -25,7 +25,7 @@ public final class DiagnosticReport {
   if(automatic){File record=new File(c.getFilesDir(),AUTOMATIC_SOURCE+".partial");try{try(FileOutputStream out=new FileOutputStream(record)){out.write(file.getName().getBytes("UTF-8"));out.getFD().sync();}if(!record.renameTo(marker))throw new IOException("Automatic source tracking unavailable");}finally{record.delete();}}
   File temporary=new File(c.getFilesDir(),file.getName()+".partial");
   try{try(FileOutputStream raw=new FileOutputStream(temporary);ZipOutputStream z=new ZipOutputStream(automatic?new AutomaticLimit(raw):raw)){
-   text(z,"environment.txt","Voyah FM 0.5.0-beta / integrated report menu\nReportFormat=2\nAutomaticLogging=enabled\nCrashEvidence=targeted crash buffer and FM DropBox in diagnostics.txt when root is available\nTime="+new Date()+"\nModel="+Build.MODEL+"\nFingerprint="+Build.FINGERPRINT+"\nSDK="+Build.VERSION.SDK_INT+"\nAppUID="+android.os.Process.myUid()+"\nNotes="+notes+"\n");
+   text(z,"environment.txt","Voyah FM 0.5.1-beta / integrated report menu\nReportFormat=2\nAutomaticLogging=enabled\nCrashEvidence=targeted crash buffer and FM DropBox in diagnostics.txt when root is available\nTime="+new Date()+"\nModel="+Build.MODEL+"\nFingerprint="+Build.FINGERPRINT+"\nSDK="+Build.VERSION.SDK_INT+"\nAppUID="+android.os.Process.myUid()+"\nNotes="+notes+"\n");
    text(z,"diagnostics.txt",diagnostic);
    for(String name:new String[]{"events.previous.log","events.log"}){File log=new File(c.getFilesDir(),name);if(log.exists()){z.putNextEntry(new ZipEntry(name));try(InputStream in=new FileInputStream(log)){byte[] b=new byte[8192];int n;while((n=in.read(b))!=-1)z.write(b,0,n);}z.closeEntry();}}
   }

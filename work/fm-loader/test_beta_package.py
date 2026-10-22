@@ -10,15 +10,15 @@ with tempfile.TemporaryDirectory(prefix='fm-beta-shipped-') as temp:
  t=pathlib.Path(temp);fake=t/'fake adb.exe'
  subprocess.run([str(compiler),'/nologo','/out:'+str(fake),str(P/'tests/FakeAdbInstall.cs')],check=True)
  package=t/'Бета радио с пробелами'
- with zipfile.ZipFile(O/'Voyah-FM-0.5.0-beta-Windows.zip') as z:
+ with zipfile.ZipFile(O/'Voyah-FM-0.5.1-beta-Windows.zip') as z:
   assert z.testzip() is None;z.extractall(package)
   hashes=json.loads(z.read('SHA256.json'))
   for name,h in hashes.items():assert hashlib.sha256((package/name).read_bytes()).hexdigest()==h
-  assert [n for n in z.namelist() if n.endswith('.apk')]==['Voyah-FM-Radio-0.5.0-beta.apk']
+  assert [n for n in z.namelist() if n.endswith('.apk')]==['Voyah-FM-Radio-0.5.1-beta.apk']
   assert 'upload.json' not in z.namelist()
   for name in ['Collect-FM-now.cmd','Collect-FM-now.ps1','Collect-FM-state.sh','Upload-FM-report.ps1','upload.example.json']:assert (package/name).read_bytes()==(P/name).read_bytes()
- validate_apk_shells(package/'Voyah-FM-Radio-0.5.0-beta.apk')
- with zipfile.ZipFile(package/'Voyah-FM-Radio-0.5.0-beta.apk') as z:
+ validate_apk_shells(package/'Voyah-FM-Radio-0.5.1-beta.apk')
+ with zipfile.ZipFile(package/'Voyah-FM-Radio-0.5.1-beta.apk') as z:
   assert z.read('assets/radio-ui.dex').startswith(b'dex\n')
   assert z.read('assets/ui.js')==(P/'assets/ui.js').read_bytes()
   for entry in ['classes.dex','assets/radio-ui.dex']:assert b'Lru/local/voyah/fmloader/ui/MenuBridge;' in z.read(entry),entry
@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory(prefix='fm-beta-shipped-') as temp:
   log=calls.read_text(encoding='utf8')
   assert log.count('|install|-r|')==1
   installed={pathlib.Path(line.split('|')[-1]).resolve() for line in log.splitlines() if '|install|-r|' in line}
-  assert (package/'Voyah-FM-Radio-0.5.0-beta.apk').resolve() in installed
+  assert (package/'Voyah-FM-Radio-0.5.1-beta.apk').resolve() in installed
   if mode!='fresh':assert '|pm|uninstall|ru.local.voyah.fmdiagnostics' in log
   assert 'fmdiagnostics/.MainActivity' not in log and 'REPORT_MENU' not in log
   assert log.index('helper.sh|log-start')<log.index('helper.sh|install-components')<log.index('helper.sh|check')
@@ -59,12 +59,12 @@ with tempfile.TemporaryDirectory(prefix='fm-beta-shipped-') as temp:
  print('PASS one-click export launcher forwards -AllReports')
 b=W/'toolchains/build-tools/android-14/aapt.exe'
 for name,label,package in [('Radio','FM Радио','ru.local.voyah.fmloader')]:
- path='../../outputs/Voyah-FM-'+name+'-0.5.0-beta.apk'
+ path='../../outputs/Voyah-FM-'+name+'-0.5.1-beta.apk'
  r=subprocess.run([str(b),'dump','badging',path],cwd=P,capture_output=True,check=True)
  data=r.stdout.decode('utf8')
- assert "name='"+package+"'" in data and "versionCode='8'" in data and "versionName='0.5.0-beta'" in data
+ assert "name='"+package+"'" in data and "versionCode='9'" in data and "versionName='0.5.1-beta'" in data
  assert "application-label:'"+label+"'" in data
  assert 'android.permission.INTERNET' in data
- results.append({'apk':name,'compiledManifest':True,'label':label,'versionCode':8})
+ results.append({'apk':name,'compiledManifest':True,'label':label,'versionCode':9})
  print('PASS compiled APK label/package/version:',name)
 (W/'fm-loader-validation/beta-shipped-package-tests.json').write_text(json.dumps(results,indent=2,ensure_ascii=False),encoding='utf8')

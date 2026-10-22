@@ -6,6 +6,8 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.MediaStore;
 import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
@@ -51,7 +53,7 @@ public final class ReportCoordinator {
  static void endHealthCheck(){captureHealthGate.unlock();}
  public static synchronized void shutdown(){ReportCoordinator current=instance;instance=null;if(current!=null){current.stopped=true;current.cancelRetry();current.worker.shutdownNow();}}
  private JSONObject snapshot(String override){
-  JSONObject out=new JSONObject();try{out.put("status",override==null?status:override);out.put("configured",configuration()!=null);out.put("auto",preferences.getBoolean("auto",true));out.put("busy",busy.get());out.put("version","0.5.0-beta");out.put("lastReport",lastReport);out.put("pending",pending);}catch(JSONException ignored){}return out;
+  JSONObject out=new JSONObject();try{out.put("status",override==null?status:override);out.put("configured",configuration()!=null);out.put("auto",preferences.getBoolean("auto",true));out.put("busy",busy.get());out.put("version","0.5.1-beta");out.put("lastReport",lastReport);out.put("pending",pending);}catch(JSONException ignored){}return out;
  }
  private UploadQueue.Config configuration(){try{return UploadQueue.Config.read(new File(context.getFilesDir(),"upload.json"));}catch(IOException ignored){return null;}}
  private UploadQueue queue(){UploadQueue.Config config=configuration();if(config==null)return null;try{return new UploadQueue(new File(context.getFilesDir(),"upload-queue"),config);}catch(IOException ignored){return null;}}
@@ -91,7 +93,7 @@ public final class ReportCoordinator {
    pending=queue.pending();setStatus(!admitted?"QUEUE_FULL":pending==0?"SENT":"QUEUED");
    AppLog.add(context,"REPORT_UPLOAD",status+" pending="+pending+" sent="+sent+(queue.lastError().isEmpty()?"":" reason="+queue.lastError()));
    if(pending>0)scheduleRetry();
-  }catch(Exception failure){setStatus("ERROR");AppLog.add(context,"REPORT_ERROR","Report operation failed; local ZIP retained");}
+  }catch(Exception failure){setStatus("ERROR");AppLog.add(context,"REPORT_ERROR","operation="+operation+" exception="+failure.getClass().getSimpleName()+"; local ZIP retained");}
   finally{capturing=false;busy.set(false);}
  }
  private void automatic(){
@@ -126,11 +128,24 @@ public final class ReportCoordinator {
  private void saveDownloads(File report)throws IOException {
   if(Build.VERSION.SDK_INT<29)throw new IOException("Downloads requires Android 10");
   ContentResolver resolver=context.getContentResolver();ContentValues values=new ContentValues();
-  values.put(MediaStore.MediaColumns.DISPLAY_NAME,report.getName());values.put(MediaStore.MediaColumns.MIME_TYPE,"application/zip");values.put(MediaStore.MediaColumns.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS);values.put(MediaStore.MediaColumns.IS_PENDING,1);
+  // This HU's MediaProvider renames a pending Downloads file but rejects the DB update.
+  // Create the final name directly, then verify its bytes before reporting success.
+  values.put(MediaStore.MediaColumns.DISPLAY_NAME,report.getName());values.put(MediaStore.MediaColumns.MIME_TYPE,"application/zip");values.put(MediaStore.MediaColumns.RELATIVE_PATH,Environment.DIRECTORY_DOWNLOADS);
   Uri destination=resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI,values);if(destination==null)throw new IOException("Downloads unavailable");
   boolean done=false;try{
    try(InputStream in=new FileInputStream(report);OutputStream out=resolver.openOutputStream(destination)){if(out==null)throw new IOException("Downloads unavailable");UploadQueue.copy(in,out,UploadQueue.MAX_REPORT);}
-   ContentValues complete=new ContentValues();complete.put(MediaStore.MediaColumns.IS_PENDING,0);if(resolver.update(destination,complete,null,null)<1)throw new IOException("Downloads unavailable");done=true;
+   verifyDownload(resolver,destination,report);done=true;
   }finally{if(!done)resolver.delete(destination,null,null);}
+ }
+ private static void verifyDownload(ContentResolver resolver,Uri destination,File original)throws IOException {
+  try{
+   MessageDigest digest=MessageDigest.getInstance("SHA-256");long length=0;
+   try(InputStream in=resolver.openInputStream(destination)){
+    if(in==null)throw new IOException("Downloads verification unavailable");
+    byte[] buffer=new byte[8192];int count;
+    while((count=in.read(buffer))!=-1){length+=count;if(length>UploadQueue.MAX_REPORT)throw new IOException("Downloads size limit");digest.update(buffer,0,count);}
+   }
+   if(length!=original.length()||!UploadQueue.hex(digest.digest()).equals(UploadQueue.hash(original)))throw new IOException("Downloads byte verification failed");
+  }catch(NoSuchAlgorithmException unavailable){throw new IOException("SHA256 unavailable",unavailable);}
  }
 }

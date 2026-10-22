@@ -1,3 +1,17 @@
+# Current:0.5.1-beta/code9 / Save ZIP
+
+OEM pending-file rename succeeds but DB update returns0; old URI no longer reads.
+Final-name Downloads write and content-URI SHA/length verified live before ADB
+was disconnected. Product fix passed red->green JVM regression, all25groups and
+shipped fake-ADB archive modes. Both personal configs remain inside private ZIPs.
+New0.5.1APK NOT installed live: owner is away from car.
+
+RUS steering report001556 confirms callbacks->station change. Chinese snapshots
+show same RDS target/flags, no timestamped key trial. Added3Next/3Previous+Send;
+no speculative key routing/power changes. Hashes/current state: EVIDENCE.md.
+
+---
+
 # Current: unified 0.5.0-beta / versionCode 8
 
 One own APK FM Radio; native in-place RDS gear menu, no separate diagnostics APK.

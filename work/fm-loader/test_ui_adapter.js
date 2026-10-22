@@ -32,5 +32,5 @@ const sandbox={Process:{id:111},console:{log:()=>{}},File:function(name){assert(
 vm.runInNewContext(fs.readFileSync(source,'utf8'),sandbox);
 assert(!installed,'Menu must be installed on the main thread');
 inMain=true;callbacks.shift()();
-assert(installed&&marker.startsWith('0.5.0'),'Native lifecycle menu not ready');
+assert(installed&&marker.startsWith('0.5.1'),'Native lifecycle menu not ready');
 console.log('PASS UI startup uses native lifecycle callbacks and current JNI references, without ART heap scan');

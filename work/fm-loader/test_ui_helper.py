@@ -17,7 +17,7 @@ nohup(){
  echo "$*" >> "$TEST_D/launches"
  [ "$1" != setsid ] || shift
  printf '%s\000' "$@" > "$TEST_PROC/889/cmdline"
- echo '0.5.0-beta-v1' > "$TEST_D/runtime/ui-ready-777"
+ echo '0.5.1-beta-v1' > "$TEST_D/runtime/ui-ready-777"
  echo '889 999' > "$TEST_D/pids"
 }
 am(){ echo "$*" >> "$TEST_D/am-calls"; return 99; }
@@ -33,7 +33,7 @@ for mode in ['active','stale']:
   hardware=(str(t/'frida-inject').replace('\\','/')+' -p 1234 -s '+str(t/'adapter.js').replace('\\','/'))
   (proc/'888/cmdline').write_bytes((active if mode=='active' else stale).encode()+b'\0')
   (proc/'999/cmdline').write_bytes(hardware.encode()+b'\0')
-  if mode=='active':(runtime/'ui-ready-777').write_text('0.5.0-beta-v1\n')
+  if mode=='active':(runtime/'ui-ready-777').write_text('0.5.1-beta-v1\n')
   env=os.environ.copy();env.update(TEST_D=str(t).replace('\\','/'),TEST_PROC=str(proc).replace('\\','/'))
   env['PATH']='C:/Program Files/Git/usr/bin;'+env['PATH']
   body=source.decode().replace('D=/data/local/tmp/voyah-fm-loader-v1','D="$TEST_D"').replace('/proc/','"$TEST_PROC"/')

@@ -2,7 +2,7 @@
 import pathlib, subprocess, zipfile, os, tempfile, json, hashlib, shutil, xml.etree.ElementTree as ET
 from payload_format import validate_source_assets,validate_apk_shells
 P=pathlib.Path(__file__).resolve().parent; W=P.parent; O=W.parent/'outputs'
-VERSION='0.5.0-beta'; VERSION_CODE='8'
+VERSION='0.5.1-beta'; VERSION_CODE='9'
 J=W/'toolchains/jdk/jdk-17.0.21-lite/bin'; B=W/'toolchains/build-tools/android-14'; A=W/'toolchains/platform/android-11/android.jar'
 def run(*args,cwd=P):subprocess.run([str(x) for x in args],check=True,cwd=cwd)
 def dex_sources(sources,root):

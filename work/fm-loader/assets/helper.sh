@@ -143,7 +143,7 @@ ensure_ui() {
         for ui_n in 1 2 3 4 5; do ui_pid=$(pidof "$RD"); [ -n "$ui_pid" ] && break; sleep 1; done
     fi
     case "$ui_pid" in ''|*[!0-9]*) echo UI_WAIT_PROCESS; [ "$1" != explicit ]; return;; esac
-    if ui_hook_alive && [ "$(cat "$D/runtime/ui-ready-$ui_pid" 2>/dev/null)" = 0.5.0-beta-v1 ]; then
+    if ui_hook_alive && [ "$(cat "$D/runtime/ui-ready-$ui_pid" 2>/dev/null)" = 0.5.1-beta-v1 ]; then
         echo "UI_READY pid=$ui_pid"; return 0
     fi
     [ -f "$D/ui.js" ] && [ -f "$D/radio-ui.dex" ] || { echo UI_PAYLOAD_MISSING; return 1; }
@@ -152,7 +152,7 @@ ensure_ui() {
     rm -f "$D/runtime/ui-ready-$ui_pid"
     nohup setsid "$D/frida-inject" -p "$ui_pid" -s "$D/ui.js" > "$D/ui-injector.log" 2>&1 < /dev/null &
     for ui_n in 1 2 3 4 5 6 7 8 9 10; do [ -f "$D/runtime/ui-ready-$ui_pid" ] && break; sleep 1; done
-    [ "$(cat "$D/runtime/ui-ready-$ui_pid" 2>/dev/null)" = 0.5.0-beta-v1 ] && ui_hook_alive || { echo UI_NOT_READY; return 1; }
+    [ "$(cat "$D/runtime/ui-ready-$ui_pid" 2>/dev/null)" = 0.5.1-beta-v1 ] && ui_hook_alive || { echo UI_NOT_READY; return 1; }
     echo "UI_READY pid=$ui_pid"
 }
 filter_fm_dropbox() {
@@ -290,7 +290,7 @@ log-stop)
     echo LOG_RECORDING_STOPPED
     ;;
 diagnostic)
-    echo '=== FM BETA 0.5.0 / DEVICE ==='
+    echo '=== FM BETA 0.5.1 / DEVICE ==='
     date; id; getprop ro.build.fingerprint; getprop ro.build.display.id
     getprop ro.product.model; getprop ro.build.version.sdk; uname -a; getenforce
     echo '=== BOOT / SAVED FREQUENCY ==='

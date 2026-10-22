@@ -24,6 +24,6 @@ with tempfile.TemporaryDirectory(prefix='fm-jvm-final-') as td:
  subprocess.run([str(j/'javac.exe'),'--release','8','-d',td,str(src/'RetrySchedule.java'),str(src/'TelnetSession.java'),str(p/'tests/TestRetrySchedule.java'),str(p/'tests/TestTelnetSession.java')],check=True)
  for cls in ['ru.local.voyah.fmloader.TestRetrySchedule','TestTelnetSession']:
   r=subprocess.run([str(j/'java.exe'),'-cp',td,cls],capture_output=True,timeout=20);results[cls]=dict(code=r.returncode,output=(r.stdout+r.stderr).decode())
-(out/'offline-0.5.0-tests.json').write_text(json.dumps(results,indent=2,ensure_ascii=False),encoding='utf8')
+(out/'offline-0.5.1-tests.json').write_text(json.dumps(results,indent=2,ensure_ascii=False),encoding='utf8')
 for n,r in results.items():print(('PASS ' if r['code']==0 else 'FAIL ')+n,flush=True)
 assert all(r['code']==0 for r in results.values()),json.dumps(results,ensure_ascii=False)

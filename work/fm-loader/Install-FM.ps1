@@ -1,4 +1,4 @@
-﻿param([string]$Adb='', [string]$Serial='', [string]$Apk=(Join-Path $PSScriptRoot 'Voyah-FM-Radio-0.5.0-beta.apk'), [string]$UploadConfig=(Join-Path $PSScriptRoot 'upload.json'))
+﻿param([string]$Adb='', [string]$Serial='', [string]$Apk=(Join-Path $PSScriptRoot 'Voyah-FM-Radio-0.5.1-beta.apk'), [string]$UploadConfig=(Join-Path $PSScriptRoot 'upload.json'))
 $ErrorActionPreference='Stop'
 $stage=$null; $archive=$null; $remote=$null; $remoteFiles=@(); $privateConfiguration=$null; $script:UseSu=$false
 function Quote-Arg([string]$Value){return '"'+[regex]::Replace([regex]::Replace($Value,'(\\*)"','$1$1\"'),'(\\+)$','$1$1')+'"'}
@@ -38,7 +38,7 @@ function Test-LegacyDiagnostics {
     throw 'LEGACY_DIAGNOSTICS_QUERY_FAILED: cannot verify whether the old diagnostics app remains; retry installation.'
 }
 try {
-    Write-Host 'Voyah FM 0.5.0 beta: one FM Radio app. Files stay in /data.'
+    Write-Host 'Voyah FM 0.5.1 beta: one FM Radio app. Files stay in /data.'
     # Parse privately: JSON parser exceptions may contain values, including the token.
     if(Test-Path -LiteralPath $UploadConfig -PathType Leaf){
         try {
@@ -172,7 +172,7 @@ for name in helper.sh broker.sh adapter.js ui.js radio-ui.dex template.xml frida
  chmod 644 "$D/$name"
 done
 chmod 755 "$D/frida-inject"
-echo 0.5.0-beta-v1 > "$D/payload-version"
+echo 0.5.1-beta-v1 > "$D/payload-version"
 chmod 644 "$D/payload-version"
 __INSTALL_UPLOAD__
 exec 0</dev/null

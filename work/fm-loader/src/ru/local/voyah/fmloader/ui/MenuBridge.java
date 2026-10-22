@@ -52,7 +52,7 @@ public final class MenuBridge implements Application.ActivityLifecycleCallbacks 
   Settings(Activity a){
    activity=a;
    LinearLayout content=new LinearLayout(a);content.setOrientation(LinearLayout.VERTICAL);content.setPadding(dp(a,24),dp(a,8),dp(a,24),dp(a,12));
-   TextView description=new TextView(a);description.setText("FM Радио · 0.5.0 beta\nЖурнал записывается автоматически.");description.setTextSize(18);content.addView(description);
+   TextView description=new TextView(a);description.setText("FM Радио · 0.5.1 beta\nЖурнал записывается автоматически.");description.setTextSize(18);content.addView(description);
    status=new TextView(a);status.setTextSize(17);status.setPadding(0,dp(a,14),0,dp(a,14));status.setText("Проверяю состояние…");content.addView(status);
    send=new Button(a);send.setText("Отправить логи");send.setOnClickListener(v->command("send"));content.addView(send);
    save=new Button(a);save.setText("Сохранить ZIP");save.setOnClickListener(v->command("save"));content.addView(save);

@@ -32,3 +32,10 @@
 - Parent: report analysis; ui/MenuBridge.java, assets/ui.js, helper.sh, broker.sh, RuntimeFiles.java, MainActivity.java, AndroidManifest.xml, root docs/device installation.
 - Android upload task: UploadQueue/ReportCoordinator/MenuActionReceiver.java, LoaderService.java, DiagnosticReport.java, новые upload/coordinator тесты. Не менять UI/installer/helper/manifest.
 - Installer task: build_beta.py, package_beta.py, test_beta_package.py, Install-FM.ps1, LocalBootstrap.java; installer/migration/fakeADB tests и инструкции. UI dex собирается из src/ru/local/voyah/fmloader/ui/*.java в assets/radio-ui.dex. Не менять helper/UI/manifest/LoaderService/ReportCoordinator; не запускать реальный ADB.
+
+## Поправка0.5.1,23.10
+
+Save ZIP обходит подтверждённый OEM pending-rename/DB-update дефект и проверяет
+content URI длиной/SHA256. Все25групп/архив прошли. НовыйAPK ещё не установлен:
+пользователь вне машины. Руль на RUS работает; китайский маршрут и сон остаются
+отдельными неподтверждёнными вопросами.

@@ -46,7 +46,7 @@ with tempfile.TemporaryDirectory(prefix='fm-install-review-') as td:
    assert log.count('|install|-r|')==1,(mode,log)
    assert 'helper.sh|log-start' in log and 'helper.sh|install-components' in log and 'helper.sh|check' in log
    assert log.index('helper.sh|log-start')<log.index('helper.sh|install-components')
-   body=boot.read_text();assert '0.5.0-beta-v1' in body
+   body=boot.read_text();assert '0.5.1-beta-v1' in body
    assert 'ui.js' in body and 'radio-ui.dex' in body
    assert '|am|start|--user|0|-n|ru.local.voyah.fmloader/.MainActivity' in log
    if mode=='fresh':assert '|pm|uninstall|' not in log
