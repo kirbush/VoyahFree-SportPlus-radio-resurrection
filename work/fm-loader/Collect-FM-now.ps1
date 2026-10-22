@@ -1,4 +1,4 @@
-﻿param([string]$Adb='', [string]$Serial='', [string]$Destination='')
+﻿param([string]$Adb='', [string]$Serial='', [string]$Destination='', [string]$UploadConfig='')
 $ErrorActionPreference='Stop'
 function Quote-WindowsArgument([string]$Value) {
     $escaped=[regex]::Replace($Value,'(\\*)"','$1$1\"')
@@ -87,7 +87,7 @@ try {
     $stage=Join-Path $tempRoot ('voyah-fm-collect-'+[guid]::NewGuid().ToString('N'))
     [void][IO.Directory]::CreateDirectory($stage)
     $encoding=New-Object Text.UTF8Encoding($false)
-    [IO.File]::WriteAllText((Join-Path $stage 'environment.txt'),("Voyah FM PC collector 1`nTime="+[DateTimeOffset]::Now.ToString('o')+"`nADB_SERIAL=$Serial`nROOT_MODE=$mode`n"),$encoding)
+    [IO.File]::WriteAllText((Join-Path $stage 'environment.txt'),("Voyah FM PC collector 2`nTime="+[DateTimeOffset]::Now.ToString('o')+"`nADB_SERIAL=$Serial`nROOT_MODE=$mode`n"),$encoding)
     [IO.File]::WriteAllText((Join-Path $stage 'diagnostics.txt'),$result.Text,$encoding)
     [IO.File]::WriteAllText((Join-Path $stage 'collection.txt'),("ROOT_MODE=$mode`nADB_EXIT="+$result.Code+"`nROOT_PROBE_NOTES:`n"+($script:ProbeNotes -join "`n")+"`nSTDERR:`n"+$result.Error),$encoding)
     $base='Voyah-FM-PC-report-'+(Get-Date -Format 'yyyyMMdd-HHmmss')
@@ -100,7 +100,19 @@ try {
     try {foreach($name in @('environment.txt','diagnostics.txt','collection.txt')){if($null -eq $zip.GetEntry($name)){throw ('Неполный ZIP: '+$name)}}}finally{$zip.Dispose()}
     [IO.File]::Move($temporary,$final);$temporary=$null
     Write-Host ('COLLECT_OK: '+$final)
-    if($interactive){[void][Windows.Forms.MessageBox]::Show(('Отправьте этот ZIP:'+"`r`n"+$final),'Отчёт радио сохранён','OK','Information')}
+    $message='Отправьте этот ZIP:'+"`r`n"+$final
+    if(-not $UploadConfig){$UploadConfig=Join-Path $PSScriptRoot 'upload.json'}
+    if([IO.File]::Exists($UploadConfig)){
+        try {
+            . (Join-Path $PSScriptRoot 'Upload-FM-report.ps1')
+            $upload=Send-FmReports -ReportPath $final -ConfigurationPath $UploadConfig
+            Write-Host ('UPLOAD_'+$upload.Status+' Pending='+$upload.Pending)
+            if($upload.Status -eq 'SENT'){$message='Отчёт отправлен на сервер. Копия сохранена:'+"`r`n"+$final}
+            elseif($upload.Status -eq 'QUEUED'){$message='Отчёт сохранён и ждёт отправки. При следующем запуске сборщика отправка повторится.'+"`r`n"+$final}
+            else {$message='Отчёт сохранён, но не отправлен. Сообщите разработчику код UPLOAD_'+$upload.Status+"`r`n"+$final}
+        } catch {Write-Host 'UPLOAD_UNAVAILABLE: local ZIP preserved'}
+    }
+    if($interactive){[void][Windows.Forms.MessageBox]::Show($message,'Отчёт радио сохранён','OK','Information')}
 } catch {Write-Error $_;exit 1}
 finally {
     if($temporary -and [IO.File]::Exists($temporary)){[IO.File]::Delete($temporary)}

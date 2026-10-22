@@ -1,4 +1,49 @@
-## Latest: GitHub download and proposed automatic upload, 2026-10-22
+## Latest: upload-only receiver and PC Collect-2, 2026-10-22
+
+User selected their working VPS, supplied SSH access, and explicitly requires only
+receiving logs without server compromise. Password rejected; supplied RSA key worked.
+Private deployment/credentials/captures remain outside Git under fm-upload-research
+and outputs/Voyah-FM-upload-private/tester-01|tester-02/upload.json. No token, root
+password or private key is in public sources or ZIP.
+
+Separate enabled systemd service uses a non-root user, loopback Waitress3.0.2,
+read-only system protections, no capabilities,256MiB/50%CPU/32tasks,private64MiB tmp.
+Existing nginx verifies bearer authorization before body admission; FM-only limits
+apply to connections/rate/body/time. Existing IP HTTPS8443 is used;443 no-SNI default
+is a separate TLS service, so no existing TLS routing was changed. Cert renewal
+timer was already active. Nginx config backup saved before adding two includes.
+
+Only PUT hash-addressed ZIP upload is exposed. No report GET/list/DELETE/command
+API. Server stores token hashes, enforces per-client idempotency, validates raw
+deflate size/CRC/eof without extraction, bounds directory before ZipFile, rejects
+ZIP64;16MiBbody/64MiBexpanded,512MiBstorage,30new/client/hour,30day hourly retention.
+Independent reviewer upload_security_review reproduced important cases and confirmed
+all fixed: central-directory memory DoS, forged-small70MiB bomb, ZIP64 override,
+valid65537byte deflate drain, full offline PC queue retry and idle retention.
+Final independent matrix72valid combinations and Java data descriptors passed.
+
+Real server synthetic-only checks: HTTPS receipt, idempotent200 after receiver
+restart, actual Windows HTTP receipt parsing, outage QUEUED then recovery SENT,
+401missing/wrongkey,405GETreport,404list/internalauth,422hash,413oversize-beforebody.
+Actual stored bytes match;0600/nonroot owner,loopback backend and previous service
+states verified. TCP-connect-only checks on this PC are unreliable due local proxy;
+verified listening address, server connect refusal and external HTTP instead.
+No real vehicle or live ADB was used. Only the new receiver was stop/restarted.
+
+Collect-2 ZIP3219951bytes,
+SHA256b13c7ff75b83c3ec79c45052f7835abab6f00e9a0fa76a1aed10647fb8d277b3.
+Public scripts+ADB+exampleconfig; private upload.json issued separately per tester.
+Actual extracted archive tested with fakeADB and real HTTPS:COLLECT_OK/UPLOAD_SENT,
+original retained. Queue survives failure, checks server receipt, drains full queue,
+preserves originals, no insecure TLS/redirects, no hardware control added.
+Android beta0.4.3 APKs unchanged. HU periodic generation/upload is explicitly next
+beta work after second tester report, per user's earlier wait instruction. Missing
+native log contents/crash cause remain unresolved; no UI/audio/frequency fix claimed.
+
+Local receipts: work/fm-upload-research/{deployment,live-validation,
+pc-package-live-validation}.json. Product tests live in tests/test_upload_*.py.
+
+## Previous: GitHub download and proposed automatic upload, 2026-10-22
 
 User explicitly requests publishing PC collector ZIP to GitHub for direct download
 because Gmail blocks the executable-containing archive. Only reviewed standalone

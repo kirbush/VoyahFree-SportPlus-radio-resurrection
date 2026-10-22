@@ -1,0 +1,5 @@
+{
+  "endpoint": "https://YOUR-SERVER/voyah-fm/v1",
+  "client": "tester-01",
+  "token": "PRIVATE_UPLOAD_ONLY_TOKEN_FROM_DEVELOPER"
+}

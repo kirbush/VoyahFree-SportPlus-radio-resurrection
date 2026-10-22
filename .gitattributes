@@ -10,3 +10,5 @@
 *.png binary
 *.apk binary
 *.zip binary
+*.service text eol=lf
+*.conf text eol=lf

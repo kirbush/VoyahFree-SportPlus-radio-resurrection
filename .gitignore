@@ -13,6 +13,7 @@
 /downloads/*
 !/downloads/README.md
 !/downloads/Voyah-FM-PC-Collect-1.zip
+!/downloads/Voyah-FM-PC-Collect-2.zip
 !/work/
 /work/*
 !/work/fm-loader/
@@ -29,6 +30,8 @@ __pycache__/
 *.jks
 *.keystore
 *.password
+upload.json
+upload-private.json
 /work/fm-loader/build/
 /work/fm-loader/test-build/
 /work/fm-loader/assets/*.apk

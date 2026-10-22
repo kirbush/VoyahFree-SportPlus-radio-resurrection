@@ -1,0 +1,35 @@
+[Unit]
+Description=Voyah FM upload-only diagnostic receiver
+After=network.target
+
+[Service]
+Type=simple
+User=voyah-fm-upload
+Group=voyah-fm-upload
+ExecStart=/opt/voyah-fm-upload/venv/bin/python /opt/voyah-fm-upload/server.py --config /etc/voyah-fm-upload/clients.json --data /var/lib/voyah-fm-upload
+Restart=on-failure
+RestartSec=5
+UMask=0077
+StateDirectory=voyah-fm-upload
+StateDirectoryMode=0700
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+LockPersonality=true
+CapabilityBoundingSet=
+RestrictAddressFamilies=AF_INET AF_UNIX
+ReadWritePaths=/var/lib/voyah-fm-upload
+TemporaryFileSystem=/tmp:size=64M,mode=1777
+MemoryMax=256M
+TasksMax=32
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
