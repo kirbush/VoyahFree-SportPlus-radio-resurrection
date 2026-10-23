@@ -1,3 +1,21 @@
+# Current evidence: external0.5.1/build18,23Oct
+
+PC084709 exactservermatch, tester-01 is historicalPC205120 car/UID10064.
+Locked/key-away/noPC absence confirmed. No new boot/process restart on08:43return:
+USB detach08:10 and reattach08:43, sameAdayo3590/RDS8288, loggap, onePCMreader.
+Not a deep-sleep/power measurement. Two earlierboots08:02/08:06 initiator pending.
+
+Concrete bug: saved101.2 retained acrossUSBoff, restored08:43:55, saved again
+08:43:56.643, thennativeinitialnotifyCurrentFM8750 at.656 overwrites to87.5.
+Favorites/list retained. Need correct station restore afterhardware-ready,
+not blind ignore8750 nor explicitautoplay. No patch/newAPK this analysis turn.
+
+Yandexfocus→FMpause chain confirmed; manualFMresume later. No newFMcrash.
+PCupload only; HUmenu-send and deliberate steeringtrial not validated.
+Raw evidence ignored in work/fm-tester1-review-20261023; rootEVIDENCE.md hasrefs.
+
+---
+
 # Current:0.5.1-beta/code9 / Save ZIP
 
 OEM pending-file rename succeeds but DB update returns0; old URI no longer reads.
