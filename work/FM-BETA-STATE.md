@@ -3,7 +3,7 @@
 PC084709 exactservermatch, tester-01 is historicalPC205120 car/UID10064.
 Locked/key-away/noPC absence confirmed. No new boot/process restart on08:43return:
 USB detach08:10 and reattach08:43, sameAdayo3590/RDS8288, loggap, onePCMreader.
-Not a deep-sleep/power measurement. Two earlierboots08:02/08:06 initiator pending.
+Not a deep-sleep/power measurement. Both earlierboots08:02/08:06 were manual, confirmed by user. No spontaneous boot in this test.
 
 Concrete bug: saved101.2 retained acrossUSBoff, restored08:43:55, saved again
 08:43:56.643, thennativeinitialnotifyCurrentFM8750 at.656 overwrites to87.5.
