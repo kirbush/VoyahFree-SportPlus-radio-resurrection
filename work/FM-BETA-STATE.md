@@ -1,7 +1,17 @@
+# Correction: VOYAH logo confirmed on return
+
+User pointed out missed logo. 4fps review confirms central VOYAH emblem around
+10.5-12.25s, interface~12.5s. Earlier8s sampling missed it. FM PIDs/AndroidbootID
+retained does NOT establish normal HU wake or explain logo. Full kernelboot also
+not proven by logo alone. HU power/UI/resume cause stillOPEN, separately from
+confirmed101.2->87.5 reset. No firmware/APK/device change in this correction.
+
+---
+
 # Current evidence: external0.5.1/build18,23Oct
 
 PC084709 exactservermatch, tester-01 is historicalPC205120 car/UID10064.
-Locked/key-away/noPC absence confirmed. No new boot/process restart on08:43return:
+Locked/key-away/noPC absence confirmed. Android bootID/FM PIDs retained on08:43return:
 USB detach08:10 and reattach08:43, sameAdayo3590/RDS8288, loggap, onePCMreader.
 Not a deep-sleep/power measurement. Both earlierboots08:02/08:06 were manual, confirmed by user. No spontaneous boot in this test.
 

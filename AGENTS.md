@@ -20,3 +20,5 @@
 - Tester installation and acceptance steps belong in the single BETA-START-HERE.txt source, shipped as ИНСТРУКЦИЯ.txt. Do not split out another tester plan.
 
 - Send report creates its ZIP automatically. Manual Save ZIP is auxiliary; never make it a required step before sending logs.
+
+- Retained Android boot ID/FM PIDs do not prove normal head-unit wake. The current tester video shows a VOYAH logo around 10.5–12.25 s; its cause remains unresolved. Correlate video and power/UI evidence before closing the wake issue.
