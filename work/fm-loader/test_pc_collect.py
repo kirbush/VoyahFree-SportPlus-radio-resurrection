@@ -3,10 +3,10 @@
 Missing root fallback, encoding loss, hidden partial transfers and no-clobber
 regressions must fail this test. Only the external ADB endpoint is substituted.
 """
-import argparse,json,os,pathlib,shlex,subprocess,tempfile,zipfile
+import argparse,hashlib,json,os,pathlib,shlex,subprocess,tempfile,zipfile
 P=pathlib.Path(__file__).resolve().parent
 args=argparse.ArgumentParser();args.add_argument('--package',type=pathlib.Path);options=args.parse_args()
-script=P/'Collect-FM-now.ps1'
+script=P/'pc-collect-3/Collect-FM-now.ps1'
 assert script.is_file(),'UI-independent PC collector is missing'
 compiler=pathlib.Path(os.environ['WINDIR'])/'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
 with tempfile.TemporaryDirectory(prefix='fm-pc-collect-') as td:
@@ -61,7 +61,6 @@ with tempfile.TemporaryDirectory(prefix='fm-pc-collect-') as td:
   assert bool(list(dest.glob('*.zip')))==(mode=='root')
  print('PASS actual CMD launcher: successful report and failure exit status')
  out=P.parent/'fm-loader-validation';out.mkdir(exist_ok=True)
- (out/'pc-collect-tests.json').write_text(json.dumps(cases,indent=2),encoding='utf8')
 
  # Execute the real Android payload. Only Android-only commands are substituted.
  shell=script.with_name('Collect-FM-state.sh').read_bytes()
@@ -94,21 +93,43 @@ dumpsys() {
   activity) echo 'TOP_ACTIVITY ru.local.voyah.fmdiagnostics';;
   window) echo 'FOCUSED_WINDOW com.pateo.rdsapp';;
   package) echo 'versionName=0.4.3-beta';;
+  qg.power_manager|bootcontrol|power|car_service)
+   if [ "$#" != 1 ]; then echo unsafe_power_argument >> "$TEST_MUTATION"; return 99; fi
+   echo "POWER_STATE_SENTINEL $1";;
+  SurfaceFlinger)
+   if [ "$#" != 2 ] || [ "$2" != --list ]; then echo unsafe_sf_argument >> "$TEST_MUTATION"; return 99; fi
+   echo 'BootAnimation1';;
   *) return 91;;
  esac
 }
 getprop() { echo FAKE_PROPERTY; }
 getenforce() { echo Permissive; }
-logcat() { echo 'LOGCAT_CRASH_READ_ONLY'; }
+logcat() {
+ case "$*" in *'-b crash'*|'-g') echo 'LOGCAT_CRASH_READ_ONLY';;
+ *)
+  echo '10-23 08:43:53.000 400 400 I BootControlModel: Reset boot anim state'
+  echo '10-23 08:43:53.100 401 401 I bootcontrol: Start boot animation'
+  echo '10-23 08:43:53.200 402 402 I qg_boot_control_BootAnimation: PLAY'
+  echo '10-23 08:43:56.656 3590 14746 D b: newFMFreq(false) 001'
+  echo '10-23 08:43:53.300 403 403 I UnrelatedChat: PRIVATE_UNRELATED_LINE';;
+ esac
+}
+dmesg() { echo '[123] PM: suspend entry'; echo '[456] PM: suspend exit'; }
+pidof() { echo 4242; }
+sha256sum() { echo 'BOOTCONTROL_HASH_SENTINEL'; }
 ps() { echo 'ru.local.voyah.fmdiagnostics'; }
 ls() { echo 'FAKE_CAPTURE_METADATA'; }
 tail() {
  case "$*" in *'/data/user/'*) echo 'CORE_EVENT fixture';; *) command tail "$@";; esac
 }
 am() { echo am >> "$TEST_MUTATION"; return 99; }
-pm() { echo pm >> "$TEST_MUTATION"; return 99; }
+pm() { if [ "$#" = 2 ] && [ "$1" = path ] && [ "$2" = com.qinggan.powermanager ]; then echo package:/system/priv-app/PowerManager-release/PowerManager-release.apk; else echo pm >> "$TEST_MUTATION"; return 99; fi; }
 kill() { echo kill >> "$TEST_MUTATION"; return 99; }
 mount() { echo mount >> "$TEST_MUTATION"; return 99; }
+setprop() { echo setprop >> "$TEST_MUTATION"; return 99; }
+input() { echo input >> "$TEST_MUTATION"; return 99; }
+reboot() { echo reboot >> "$TEST_MUTATION"; return 99; }
+cmd() { echo cmd >> "$TEST_MUTATION"; return 99; }
 '''
  env=os.environ.copy();env.update(TEST_D=str(runtime).replace('\\','/'),TEST_DROP=str(drop).replace('\\','/'),TEST_MUTATION=str(mutation).replace('\\','/'))
  env['PATH']=r'C:/Program Files/Git/usr/bin;'+env['PATH']
@@ -125,7 +146,15 @@ mount() { echo mount >> "$TEST_MUTATION"; return 99; }
   assert 'DROPBOX_COMMAND_EXIT=0' in text
   assert ('REAL_HELPER_SNAPSHOT' in text)==helper
   assert 'VOYAH_PC_DIAGNOSTIC_END' in text and not mutation.exists()
+  for wanted in ['POWER_STATE_SENTINEL qg.power_manager','POWER_STATE_SENTINEL bootcontrol','POWER_STATE_SENTINEL car_service','BOOTCONTROL_HASH_SENTINEL','Reset boot anim state','Start boot animation','BootAnimation1','PM: suspend entry','PM: suspend exit','newFMFreq(false) 001']:
+   assert wanted in text,'Missing passive power evidence: '+wanted
+  assert 'PRIVATE_UNRELATED_LINE' not in text,'Unrelated main-buffer messages leaked'
  drop.write_text('====================================\nProcess: com.unrelated.app\nSECRET_ONLY_OTHER\n',encoding='utf8')
  r=subprocess.run(['C:/Program Files/Git/bin/bash.exe'],input=(prefix+body).encode(),env=env,capture_output=True,timeout=15)
  text=r.stdout.decode('utf8');assert r.returncode==0 and 'NO_MATCHING_FM_CRASH_ENTRY' in text and 'SECRET_ONLY_OTHER' not in text
  print('PASS actual Android collector: helper present/missing, UI state, targeted/empty crash text, no control calls')
+
+ # Release evidence is written only after BOTH the real Windows and Android tests pass.
+ fingerprints={name:hashlib.sha256(script.with_name(name).read_bytes()).hexdigest() for name in ['Collect-FM-now.ps1','Collect-FM-now.cmd','Collect-FM-state.sh']}
+ for case in cases:case['sourceHashes']=fingerprints
+ (out/'pc-collect-tests.json').write_text(json.dumps(cases,indent=2),encoding='utf8')

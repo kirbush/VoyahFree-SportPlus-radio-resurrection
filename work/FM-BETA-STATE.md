@@ -1,3 +1,19 @@
+# Current next step: passive PC Collector3
+
+FM0.5.1/code9 and bundledCollector2 byte-identical; no new FM patch shipped.
+Standalone Collector3/sourcepc-collect-3 captures existing power/UART rings FIRST,
+then no-argument OEMpower/bootcontrol dumps, componenthashes/processstartticks/
+suspend state. Both personalconfigs verified withfakeADB+fakeupload, notlive.
+25groups plus latestcollector/archive checks passed; review no blocking finding.
+
+Static7.3.1 nativeBootControl has actual reset/replay logo route afterpowerstate,
+not yetproved onexactlive7.2. UARTcallback maybefresh001 OR scanfinish006cache;
+readyUprecedesdelayedconfig/ACK, so no blind8750guard/earlytune/autoplay.
+Needone20min noPC parkedtrial, filmwake, nofrequencychange, thenimmediateCollect3.
+Detailed criteria: work/fm-loader/WAKE-INVESTIGATION.md, rootEVIDENCE.
+
+---
+
 # Correction: VOYAH logo confirmed on return
 
 User pointed out missed logo. 4fps review confirms central VOYAH emblem around

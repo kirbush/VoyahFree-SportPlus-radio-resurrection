@@ -1,17 +1,20 @@
-# Сборщик отчёта FM для Windows
+# Сборщик отчёта FM и пробуждения для Windows
 
-[Скачать Voyah-FM-PC-Collect-2.zip](https://github.com/kirbush/VoyahFree-SportPlus-radio-resurrection/raw/refs/heads/main/downloads/Voyah-FM-PC-Collect-2.zip)
+[Скачать Voyah-FM-PC-Collect-3.zip](https://github.com/kirbush/VoyahFree-SportPlus-radio-resurrection/raw/refs/heads/main/downloads/Voyah-FM-PC-Collect-3.zip)
 
-1. Распаковать архив целиком.
-2. Если разработчик прислал **upload.json**, положить его рядом с **Collect-FM-now.cmd**.
-3. Подключить ПК к мультимедиа по USB.
-4. Запустить **Collect-FM-now.cmd** и выбрать папку на ПК.
-5. Дождаться **COLLECT_OK**. **UPLOAD_SENT** означает, что отчёт уже на сервере.
+1. Распаковать архив целиком. В персональном пакете отправка уже настроена; для публичного upload.json предоставляется отдельно.
+2. После возврата к машине снять заставку до подключения ПК, частоту пока не менять.
+3. Подключить ПК по USB, запустить Collect-FM-now.cmd и выбрать папку.
+4. Дождаться COLLECT_OK и UPLOAD_SENT, затем отключить USB. Копия ZIP остаётся на ПК.
 
-**UPLOAD_QUEUED** — файл сохранён и ждёт отправки. Повторить запуск сборщика при наличии интернета. Без upload.json нужно отправить созданный ZIP вручную.
+Collector3 дополнительно читает существующие OEM power/bootcontrol/UART журналы,
+состояние питания и процессов, хеши штатных компонентов и suspend counters.
+Исторические кольца читаются до медленных снимков; запись на ГУ не останавливается.
+Команд настройки/перезапуска FM, изменения питания или установки APK нет.
+Сбор до четырёх минут; при отсутствии root отчёт явно ограничен.
 
-Открывать диагностику на ГУ не требуется. Это отдельный сборщик отчёта, приложения он не переустанавливает. ADB включён в архив.
+Публичный архив без действующих ключей. Ошибка отправки сохраняет ZIP и очередь.
 
-Размер: 3 219 951 байт. SHA-256: `b13c7ff75b83c3ec79c45052f7835abab6f00e9a0fa76a1aed10647fb8d277b3`.
+Размер: 3221050 байт. SHA256: `b4b1bb0416f2ed1e5bbcfb5dadb7ba3f2ef1bc1894442613dfdb71daa6422a6a`.
 
-[Предыдущий Collect-1](https://github.com/kirbush/VoyahFree-SportPlus-radio-resurrection/raw/refs/heads/main/downloads/Voyah-FM-PC-Collect-1.zip) остаётся доступен для локального сбора без отправки.
+[Прежний Collect-2](https://github.com/kirbush/VoyahFree-SportPlus-radio-resurrection/raw/refs/heads/main/downloads/Voyah-FM-PC-Collect-2.zip) и [Collect-1](https://github.com/kirbush/VoyahFree-SportPlus-radio-resurrection/raw/refs/heads/main/downloads/Voyah-FM-PC-Collect-1.zip) сохранены. Установщик FM0.5.1 остаётся прежним.
